@@ -16,7 +16,9 @@ import {
   Check,
   Trash2,
   RotateCcw,
-  History
+  History,
+  Edit3,
+  Save
 } from 'lucide-react';
 
 export default function App() {
@@ -35,10 +37,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking'); // 'booking' | 'dashboard'
   const [adminViewTab, setAdminViewTab] = useState('active'); // 'active' | 'deleted'
   
-  // Exact requested avatar image URL
+  // Custom total hosted parties state editable by host
+  const [hostedParties, setHostedParties] = useState(() => {
+    const saved = localStorage.getItem('valerie_hosted_parties');
+    return saved ? saved : '2,130+';
+  });
+  const [newHostedCount, setNewHostedCount] = useState(hostedParties);
+  const [isEditingParties, setIsEditingParties] = useState(false);
+
   const realValerieAvatar = "https://sunday-city-waves--00ko1l64.preview.static.emergentagent.com/valerie-avatar.jpeg";
 
-  // Initial default submissions if localStorage is empty
   const defaultSubmissions = [
     { 
       id: 1, 
@@ -75,7 +83,6 @@ export default function App() {
     },
   ];
 
-  // Persistent storage using localStorage so data survives page refresh/re-deployments
   const [submissions, setSubmissions] = useState(() => {
     const saved = localStorage.getItem('valerie_submissions');
     if (saved) {
@@ -92,7 +99,6 @@ export default function App() {
     return [];
   });
 
-  // Sync state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('valerie_submissions', JSON.stringify(submissions));
   }, [submissions]);
@@ -100,6 +106,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('valerie_deleted_submissions', JSON.stringify(deletedSubmissions));
   }, [deletedSubmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('valerie_hosted_parties', hostedParties);
+  }, [hostedParties]);
 
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
@@ -186,6 +196,32 @@ export default function App() {
     }
   };
 
+  const handleSaveHostedParties = (e) => {
+    e.preventDefault();
+    setHostedParties(newHostedCount);
+    setIsEditingParties(false);
+  };
+
+  // Exact styled name component based on uploaded screenshot
+  const CustomStyledName = ({ fontSize = "text-2xl sm:text-3xl" }) => (
+    <div className={`font-black font-rounded tracking-wide flex items-center gap-1 ${fontSize}`}>
+      <span className="text-[#a75bf2]">-</span>
+      <span className="text-[#a75bf2]">V</span>
+      <span className="text-[#ea49cd]">A</span>
+      <span className="text-[#a75bf2]">L</span>
+      <span className="text-[#a75bf2]">E</span>
+      <span className="text-[#ea49cd]">R</span>
+      <span className="text-[#ea49cd]">I</span>
+      <span className="text-[#a75bf2]">E</span>
+      <span className="text-white mx-1"></span>
+      <span className="text-[#a75bf2]">G</span>
+      <span className="text-[#a75bf2]">U</span>
+      <span className="text-[#ea49cd]">R</span>
+      <span className="text-[#a75bf2]">L</span>
+      <span className="text-[#a75bf2]">-</span>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0b0813] text-gray-100 font-sans selection:bg-pink-500 selection:text-white">
       
@@ -206,9 +242,7 @@ export default function App() {
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#120d1d] rounded-full"></span>
             </div>
             <div>
-              <h1 className="font-extrabold text-lg text-white tracking-wider flex items-center gap-1.5">
-                VALERIE GURL
-              </h1>
+              <CustomStyledName fontSize="text-lg" />
               <p className="text-xs text-pink-400 font-mono">133LNO • OG HOST</p>
             </div>
           </div>
@@ -251,14 +285,14 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {activeTab === 'dashboard' && isLoggedIn ? (
-          /* Admin Dashboard with Active and Deleted tabs */
+          /* Admin Dashboard with Active, Deleted tabs & Hosted Parties Editor */
           <section className="bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 shadow-2xl space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-900/30">
               <div>
                 <h2 className="text-2xl font-black text-white flex items-center gap-2">
                   <ShieldCheck className="text-pink-500" /> VALERIE GURL COMMAND CENTER
                 </h2>
-                <p className="text-xs text-gray-400">Manage real-time party wave registrations (saved in browser memory).</p>
+                <p className="text-xs text-gray-400">Manage real-time party wave registrations & host settings.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -268,6 +302,49 @@ export default function App() {
                   Logout
                 </button>
               </div>
+            </div>
+
+            {/* Host Stats Update Option */}
+            <div className="bg-[#1a1329] border border-purple-500/30 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-6 h-6 text-amber-400" />
+                <div>
+                  <h4 className="text-sm font-bold text-white">Total Hosted Parties Count</h4>
+                  <p className="text-xs text-gray-400">Currently showing: <span className="text-pink-400 font-bold">{hostedParties}</span> on public site.</p>
+                </div>
+              </div>
+
+              {isEditingParties ? (
+                <form onSubmit={handleSaveHostedParties} className="flex items-center gap-2 w-full sm:w-auto">
+                  <input 
+                    type="text" 
+                    value={newHostedCount}
+                    onChange={(e) => setNewHostedCount(e.target.value)}
+                    placeholder="e.g. 2,150+"
+                    className="bg-[#120d1d] border border-pink-500/50 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                  />
+                  <button 
+                    type="submit"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold"
+                  >
+                    <Save className="w-3.5 h-3.5" /> Save
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditingParties(false)}
+                    className="px-2 py-1.5 text-xs text-gray-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <button 
+                  onClick={() => { setNewHostedCount(hostedParties); setIsEditingParties(true); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-900/60 hover:bg-purple-800 border border-purple-500/30 text-purple-200 text-xs font-bold rounded-lg transition-all"
+                >
+                  <Edit3 className="w-3.5 h-3.5" /> Update Total Parties
+                </button>
+              )}
             </div>
 
             {/* Admin Tabs */}
@@ -425,7 +502,7 @@ export default function App() {
 
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  {/* Glowing Pink Ring Avatar matching exact link */}
+                  {/* Glowing Pink Ring Avatar */}
                   <div className="relative p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
                     <img 
                       src={realValerieAvatar} 
@@ -440,15 +517,11 @@ export default function App() {
 
                   <div>
                     <div className="flex items-center gap-2">
-                      {/* Bold Crisp White Title with Soft Neon Glow */}
-                      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
-                        VALERIE GURL
-                      </h2>
-                      <span className="px-2.5 py-1 text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-500/50 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.3)]">
+                      <CustomStyledName fontSize="text-2xl sm:text-3xl" />
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-500/50 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.3)] whitespace-nowrap">
                         Verified OG
                       </span>
                     </div>
-                    {/* Vibrant Light Pink Subtitle matching reference style */}
                     <p className="text-xs font-mono text-[#ff80bf] mt-1 font-semibold tracking-wide">
                       133LNO • The OG Party Host • Sunday City
                     </p>
@@ -462,7 +535,7 @@ export default function App() {
                 <div className="grid grid-cols-3 gap-3 mb-8" id="stats">
                   <div className="bg-[#1a1329] border border-pink-900/30 p-3 rounded-xl text-center">
                     <Trophy className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                    <div className="text-xl font-black text-white">2,130+</div>
+                    <div className="text-xl font-black text-white">{hostedParties}</div>
                     <div className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Hosted Waves</div>
                   </div>
 
@@ -659,7 +732,7 @@ export default function App() {
               <ul className="text-xs text-gray-400 space-y-2 leading-relaxed">
                 <li>• Zero disconnects — waves restart instantly if anything drops.</li>
                 <li>• Friendly queue, no drama, no waiting-room chaos.</li>
-                <li>• 2,130+ waves hosted with a 503-party single-wave record.</li>
+                <li>• {hostedParties} waves hosted with a 503-party single-wave record.</li>
               </ul>
             </div>
 
