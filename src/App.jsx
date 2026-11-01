@@ -37,7 +37,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking'); // 'booking' | 'dashboard'
   const [adminViewTab, setAdminViewTab] = useState('active'); // 'active' | 'deleted'
   
-  // Custom total hosted parties state editable by host
   const [hostedParties, setHostedParties] = useState(() => {
     const saved = localStorage.getItem('valerie_hosted_parties');
     return saved ? saved : '2,130+';
@@ -202,9 +201,8 @@ export default function App() {
     setIsEditingParties(false);
   };
 
-  // Exact styled name component based on uploaded screenshot
   const CustomStyledName = ({ fontSize = "text-2xl sm:text-3xl" }) => (
-    <div className={`font-black font-rounded tracking-wide flex items-center gap-1 ${fontSize}`}>
+    <div className={`font-black tracking-wide flex items-center gap-0.5 whitespace-nowrap ${fontSize}`}>
       <span className="text-[#a75bf2]">-</span>
       <span className="text-[#a75bf2]">V</span>
       <span className="text-[#ea49cd]">A</span>
@@ -229,11 +227,11 @@ export default function App() {
       <header className="sticky top-0 z-40 bg-[#120d1d]/90 backdrop-blur-md border-b border-pink-900/30 px-4 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
+            <div className="relative w-10 h-10 flex-shrink-0">
               <img 
                 src={realValerieAvatar} 
                 alt="VALERIE GURL" 
-                className="w-10 h-10 rounded-full border-2 border-pink-500 object-cover shadow-[0_0_12px_rgba(236,72,153,0.6)]"
+                className="w-10 h-10 rounded-full border-2 border-pink-500 object-cover object-top shadow-[0_0_12px_rgba(236,72,153,0.6)]"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80";
@@ -242,7 +240,7 @@ export default function App() {
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#120d1d] rounded-full"></span>
             </div>
             <div>
-              <CustomStyledName fontSize="text-lg" />
+              <CustomStyledName fontSize="text-base sm:text-lg" />
               <p className="text-xs text-pink-400 font-mono">133LNO • OG HOST</p>
             </div>
           </div>
@@ -285,7 +283,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {activeTab === 'dashboard' && isLoggedIn ? (
-          /* Admin Dashboard with Active, Deleted tabs & Hosted Parties Editor */
+          /* Admin Dashboard */
           <section className="bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 shadow-2xl space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-900/30">
               <div>
@@ -502,12 +500,12 @@ export default function App() {
 
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  {/* Glowing Pink Ring Avatar */}
-                  <div className="relative p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
+                  {/* Fixed Round Perfect Circle Avatar (No Oval/Stretching) */}
+                  <div className="relative w-20 h-20 flex-shrink-0 p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
                     <img 
                       src={realValerieAvatar} 
                       alt="VALERIE GURL Avatar" 
-                      className="w-20 h-20 rounded-full object-cover border-2 border-[#120d1d]"
+                      className="w-full h-full rounded-full object-cover object-top border-2 border-[#120d1d]"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&auto=format&fit=crop&q=80";
@@ -515,9 +513,9 @@ export default function App() {
                     />
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <CustomStyledName fontSize="text-2xl sm:text-3xl" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CustomStyledName fontSize="text-xl sm:text-2xl" />
                       <span className="px-2 py-0.5 text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-500/50 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.3)] whitespace-nowrap">
                         Verified OG
                       </span>
