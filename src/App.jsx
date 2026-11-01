@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   Sparkles, 
@@ -35,10 +35,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking'); // 'booking' | 'dashboard'
   const [adminViewTab, setAdminViewTab] = useState('active'); // 'active' | 'deleted'
   
-  const realValerieAvatar = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&auto=format&fit=crop&q=80";
+  // Exact requested avatar image URL
+  const realValerieAvatar = "https://sunday-city-waves--00ko1l64.preview.static.emergentagent.com/valerie-avatar.jpeg";
 
-  // Active Submissions with precise UTC timestamps
-  const [submissions, setSubmissions] = useState([
+  // Initial default submissions if localStorage is empty
+  const defaultSubmissions = [
     { 
       id: 1, 
       name: 'NeonKitten', 
@@ -72,10 +73,33 @@ export default function App() {
       status: 'Completed', 
       screenshot: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80' 
     },
-  ]);
+  ];
 
-  // Deleted Submissions state
-  const [deletedSubmissions, setDeletedSubmissions] = useState([]);
+  // Persistent storage using localStorage so data survives page refresh/re-deployments
+  const [submissions, setSubmissions] = useState(() => {
+    const saved = localStorage.getItem('valerie_submissions');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return defaultSubmissions; }
+    }
+    return defaultSubmissions;
+  });
+
+  const [deletedSubmissions, setDeletedSubmissions] = useState(() => {
+    const saved = localStorage.getItem('valerie_deleted_submissions');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return []; }
+    }
+    return [];
+  });
+
+  // Sync state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('valerie_submissions', JSON.stringify(submissions));
+  }, [submissions]);
+
+  useEffect(() => {
+    localStorage.setItem('valerie_deleted_submissions', JSON.stringify(deletedSubmissions));
+  }, [deletedSubmissions]);
 
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
@@ -91,7 +115,11 @@ export default function App() {
     const file = e.target.files[0];
     if (file) {
       setGemsProof(file);
-      setProofPreview(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -170,6 +198,10 @@ export default function App() {
                 src={realValerieAvatar} 
                 alt="VALERIE GURL" 
                 className="w-10 h-10 rounded-full border-2 border-pink-500 object-cover shadow-[0_0_12px_rgba(236,72,153,0.6)]"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80";
+                }}
               />
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#120d1d] rounded-full"></span>
             </div>
@@ -226,7 +258,7 @@ export default function App() {
                 <h2 className="text-2xl font-black text-white flex items-center gap-2">
                   <ShieldCheck className="text-pink-500" /> VALERIE GURL COMMAND CENTER
                 </h2>
-                <p className="text-xs text-gray-400">Manage real-time party wave registrations with UTC timestamp tracking.</p>
+                <p className="text-xs text-gray-400">Manage real-time party wave registrations (saved in browser memory).</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -393,24 +425,31 @@ export default function App() {
 
               <div>
                 <div className="flex items-center gap-4 mb-6">
+                  {/* Glowing Pink Ring Avatar matching exact link */}
                   <div className="relative p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
                     <img 
                       src={realValerieAvatar} 
                       alt="VALERIE GURL Avatar" 
                       className="w-20 h-20 rounded-full object-cover border-2 border-[#120d1d]"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&auto=format&fit=crop&q=80";
+                      }}
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
+                      {/* Bold Crisp White Title with Soft Neon Glow */}
+                      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
                         VALERIE GURL
                       </h2>
                       <span className="px-2.5 py-1 text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-500/50 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.3)]">
                         Verified OG
                       </span>
                     </div>
-                    <p className="text-xs font-mono text-pink-400 mt-1 font-semibold tracking-wide">
+                    {/* Vibrant Light Pink Subtitle matching reference style */}
+                    <p className="text-xs font-mono text-[#ff80bf] mt-1 font-semibold tracking-wide">
                       133LNO • The OG Party Host • Sunday City
                     </p>
                   </div>
