@@ -13,7 +13,10 @@ import {
   CheckCircle2, 
   X,
   Eye,
-  Check
+  Check,
+  Trash2,
+  RotateCcw,
+  History
 } from 'lucide-react';
 
 export default function App() {
@@ -29,17 +32,60 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [passcode, setPasscode] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('booking');
+  const [activeTab, setActiveTab] = useState('booking'); // 'booking' | 'dashboard'
+  const [adminViewTab, setAdminViewTab] = useState('active'); // 'active' | 'deleted'
   
+  const realValerieAvatar = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&auto=format&fit=crop&q=80";
+
+  // Active Submissions with precise UTC timestamps
   const [submissions, setSubmissions] = useState([
-    { id: 1, name: 'NeonKitten', tag: '992X', waves: 2, gems: 200, total: 400, time: '10 mins ago', status: 'Pending', screenshot: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80' },
-    { id: 2, name: 'CyberSamurai', tag: '133LNO', waves: 5, gems: 200, total: 1000, time: '35 mins ago', status: 'Approved', screenshot: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80' },
-    { id: 3, name: 'PixelQueen', tag: '774AB', waves: 1, gems: 250, total: 250, time: '1 hour ago', status: 'Completed', screenshot: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80' },
+    { 
+      id: 1, 
+      name: 'NeonKitten', 
+      tag: '992X', 
+      waves: 2, 
+      gems: 200, 
+      total: 400, 
+      timestamp: '2026-11-01 14:15 UTC', 
+      status: 'Pending', 
+      screenshot: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80' 
+    },
+    { 
+      id: 2, 
+      name: 'CyberSamurai', 
+      tag: '133LNO', 
+      waves: 5, 
+      gems: 200, 
+      total: 1000, 
+      timestamp: '2026-11-01 13:40 UTC', 
+      status: 'Approved', 
+      screenshot: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80' 
+    },
+    { 
+      id: 3, 
+      name: 'PixelQueen', 
+      tag: '774AB', 
+      waves: 1, 
+      gems: 250, 
+      total: 250, 
+      timestamp: '2026-11-01 12:10 UTC', 
+      status: 'Completed', 
+      screenshot: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80' 
+    },
   ]);
+
+  // Deleted Submissions state
+  const [deletedSubmissions, setDeletedSubmissions] = useState([]);
 
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
   const totalGems = (parseInt(wavesCount) || 0) * (parseInt(gemsPerWave) || 0);
+
+  const getCurrentUTCTime = () => {
+    const now = new Date();
+    const isoString = now.toISOString();
+    return isoString.replace('T', ' ').substring(0, 16) + ' UTC';
+  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -65,7 +111,7 @@ export default function App() {
       waves: parseInt(wavesCount),
       gems: parseInt(gemsPerWave),
       total: totalGems,
-      time: 'Just now',
+      timestamp: getCurrentUTCTime(),
       status: 'Pending',
       screenshot: proofPreview || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80'
     };
@@ -83,12 +129,12 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (passcode === 'admin123' || username.toLowerCase() === 'valerie') {
+    if (username.trim() === 'sherlynavalerie' && passcode === 'TheOGHost14') {
       setIsLoggedIn(true);
       setShowLoginModal(false);
       setActiveTab('dashboard');
     } else {
-      alert('Invalid Passcode! Try "admin123"');
+      alert('Invalid Username or Passcode!');
     }
   };
 
@@ -96,23 +142,39 @@ export default function App() {
     setSubmissions(submissions.map(sub => sub.id === id ? { ...sub, status: newStatus } : sub));
   };
 
+  const handleDeleteRequest = (id) => {
+    const itemToDelete = submissions.find(sub => sub.id === id);
+    if (itemToDelete) {
+      setSubmissions(submissions.filter(sub => sub.id !== id));
+      setDeletedSubmissions([{ ...itemToDelete, deletedAt: getCurrentUTCTime() }, ...deletedSubmissions]);
+    }
+  };
+
+  const handleRestoreRequest = (id) => {
+    const itemToRestore = deletedSubmissions.find(sub => sub.id === id);
+    if (itemToRestore) {
+      setDeletedSubmissions(deletedSubmissions.filter(sub => sub.id !== id));
+      setSubmissions([itemToRestore, ...submissions]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0813] text-gray-100 font-sans selection:bg-pink-500 selection:text-white">
       
-      {/* Header */}
+      {/* Header Navbar */}
       <header className="sticky top-0 z-40 bg-[#120d1d]/90 backdrop-blur-md border-b border-pink-900/30 px-4 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
+                src={realValerieAvatar} 
                 alt="VALERIE GURL" 
-                className="w-10 h-10 rounded-full border-2 border-pink-500 object-cover shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+                className="w-10 h-10 rounded-full border-2 border-pink-500 object-cover shadow-[0_0_12px_rgba(236,72,153,0.6)]"
               />
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#120d1d] rounded-full"></span>
             </div>
             <div>
-              <h1 className="font-bold text-lg text-white tracking-wider flex items-center gap-1.5">
+              <h1 className="font-extrabold text-lg text-white tracking-wider flex items-center gap-1.5">
                 VALERIE GURL
               </h1>
               <p className="text-xs text-pink-400 font-mono">133LNO • OG HOST</p>
@@ -153,113 +215,208 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {activeTab === 'dashboard' && isLoggedIn ? (
-          <section className="bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-pink-900/30">
+          /* Admin Dashboard with Active and Deleted tabs */
+          <section className="bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 shadow-2xl space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-900/30">
               <div>
                 <h2 className="text-2xl font-black text-white flex items-center gap-2">
                   <ShieldCheck className="text-pink-500" /> VALERIE GURL COMMAND CENTER
                 </h2>
-                <p className="text-xs text-gray-400">Manage real-time party wave registrations and verify gem proofs.</p>
+                <p className="text-xs text-gray-400">Manage real-time party wave registrations with UTC timestamp tracking.</p>
               </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsLoggedIn(false)}
+                  className="px-3 py-1.5 text-xs bg-red-950/80 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-900"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            {/* Admin Tabs */}
+            <div className="flex items-center gap-4 border-b border-pink-900/30 pb-2">
               <button 
-                onClick={() => setIsLoggedIn(false)}
-                className="px-3 py-1.5 text-xs bg-red-950/80 border border-red-500/30 text-red-300 rounded-lg hover:bg-red-900"
+                onClick={() => setAdminViewTab('active')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  adminViewTab === 'active' 
+                    ? 'bg-pink-600 text-white shadow-[0_0_12px_rgba(236,72,153,0.4)]' 
+                    : 'bg-[#1a1329] text-gray-400 hover:text-white'
+                }`}
               >
-                Logout
+                Active Registrations ({submissions.length})
+              </button>
+              <button 
+                onClick={() => setAdminViewTab('deleted')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  adminViewTab === 'deleted' 
+                    ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)]' 
+                    : 'bg-[#1a1329] text-gray-400 hover:text-white'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" /> Deleted History ({deletedSubmissions.length})
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-300">
-                <thead className="bg-[#1a1329] text-xs uppercase text-pink-400 border-b border-pink-900/30">
-                  <tr>
-                    <th className="p-3">Player Name</th>
-                    <th className="p-3">Tag</th>
-                    <th className="p-3">Waves</th>
-                    <th className="p-3">Gems/Wave</th>
-                    <th className="p-3">Total Gems</th>
-                    <th className="p-3">Proof</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-pink-900/20">
-                  {submissions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-purple-950/20">
-                      <td className="p-3 font-semibold text-white">{sub.name}</td>
-                      <td className="p-3 font-mono text-pink-300">{sub.tag}</td>
-                      <td className="p-3">{sub.waves} wave(s)</td>
-                      <td className="p-3">{sub.gems}</td>
-                      <td className="p-3 font-bold text-emerald-400">{sub.total} 💎</td>
-                      <td className="p-3">
-                        <button 
-                          onClick={() => setSelectedProofModal(sub.screenshot)}
-                          className="flex items-center gap-1 text-xs bg-purple-900/50 hover:bg-purple-800 text-pink-300 px-2 py-1 rounded border border-pink-500/20"
-                        >
-                          <Eye className="w-3 h-3" /> View Screenshot
-                        </button>
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
-                          sub.status === 'Approved' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' :
-                          sub.status === 'Completed' ? 'bg-blue-950 text-blue-400 border border-blue-500/30' :
-                          'bg-amber-950 text-amber-400 border border-amber-500/30'
-                        }`}>
-                          {sub.status}
-                        </span>
-                      </td>
-                      <td className="p-3 flex gap-2">
-                        <button 
-                          onClick={() => updateStatus(sub.id, 'Approved')}
-                          className="p-1.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-400 rounded border border-emerald-500/30"
-                          title="Approve"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(sub.id, 'Completed')}
-                          className="p-1.5 bg-blue-900/40 hover:bg-blue-800/60 text-blue-400 rounded border border-blue-500/30"
-                          title="Complete"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                        </button>
-                      </td>
+            {adminViewTab === 'active' ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-gray-300">
+                  <thead className="bg-[#1a1329] text-xs uppercase text-pink-400 border-b border-pink-900/30">
+                    <tr>
+                      <th className="p-3">UTC Timestamp</th>
+                      <th className="p-3">Player Name</th>
+                      <th className="p-3">Tag</th>
+                      <th className="p-3">Waves</th>
+                      <th className="p-3">Gems/Wave</th>
+                      <th className="p-3">Total Gems</th>
+                      <th className="p-3">Proof</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-pink-900/20">
+                    {submissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="p-6 text-center text-gray-500 text-xs">No active registrations found.</td>
+                      </tr>
+                    ) : (
+                      submissions.map((sub) => (
+                        <tr key={sub.id} className="hover:bg-purple-950/20">
+                          <td className="p-3 font-mono text-xs text-pink-300">{sub.timestamp}</td>
+                          <td className="p-3 font-semibold text-white">{sub.name}</td>
+                          <td className="p-3 font-mono text-gray-300">{sub.tag}</td>
+                          <td className="p-3">{sub.waves} wave(s)</td>
+                          <td className="p-3">{sub.gems}</td>
+                          <td className="p-3 font-bold text-emerald-400">{sub.total} 💎</td>
+                          <td className="p-3">
+                            <button 
+                              onClick={() => setSelectedProofModal(sub.screenshot)}
+                              className="flex items-center gap-1 text-xs bg-purple-900/50 hover:bg-purple-800 text-pink-300 px-2 py-1 rounded border border-pink-500/20"
+                            >
+                              <Eye className="w-3 h-3" /> View
+                            </button>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
+                              sub.status === 'Approved' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' :
+                              sub.status === 'Completed' ? 'bg-blue-950 text-blue-400 border border-blue-500/30' :
+                              'bg-amber-950 text-amber-400 border border-amber-500/30'
+                            }`}>
+                              {sub.status}
+                            </span>
+                          </td>
+                          <td className="p-3 flex items-center gap-2">
+                            <button 
+                              onClick={() => updateStatus(sub.id, 'Approved')}
+                              className="p-1.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-400 rounded border border-emerald-500/30"
+                              title="Approve"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => updateStatus(sub.id, 'Completed')}
+                              className="p-1.5 bg-blue-900/40 hover:bg-blue-800/60 text-blue-400 rounded border border-blue-500/30"
+                              title="Complete"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteRequest(sub.id)}
+                              className="p-1.5 bg-red-950/80 hover:bg-red-900 text-red-400 rounded border border-red-500/30 transition-all"
+                              title="Delete Request"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* Deleted History Tab */
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-gray-300">
+                  <thead className="bg-[#1a1329] text-xs uppercase text-red-400 border-b border-red-900/30">
+                    <tr>
+                      <th className="p-3">Original UTC Time</th>
+                      <th className="p-3">Deleted At (UTC)</th>
+                      <th className="p-3">Player Name</th>
+                      <th className="p-3">Tag</th>
+                      <th className="p-3">Waves</th>
+                      <th className="p-3">Total Gems</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-red-900/20">
+                    {deletedSubmissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-6 text-center text-gray-500 text-xs">No deleted requests history.</td>
+                      </tr>
+                    ) : (
+                      deletedSubmissions.map((sub) => (
+                        <tr key={sub.id} className="hover:bg-red-950/10">
+                          <td className="p-3 font-mono text-xs text-gray-400">{sub.timestamp}</td>
+                          <td className="p-3 font-mono text-xs text-red-400">{sub.deletedAt}</td>
+                          <td className="p-3 font-semibold text-white line-through">{sub.name}</td>
+                          <td className="p-3 font-mono text-pink-300">{sub.tag}</td>
+                          <td className="p-3">{sub.waves} wave(s)</td>
+                          <td className="p-3 text-gray-400">{sub.total} 💎</td>
+                          <td className="p-3">
+                            <button 
+                              onClick={() => handleRestoreRequest(sub.id)}
+                              className="flex items-center gap-1 text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 px-3 py-1.5 rounded border border-emerald-500/30"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" /> Restore
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         ) : (
+          /* Public Hero Section */
           <section id="booking" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
-            {/* Left Card */}
+            {/* Left Card: VALERIE GURL Profile */}
             <div className="lg:col-span-5 bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(236,72,153,0.15)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <img 
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80" 
-                    alt="VALERIE GURL" 
-                    className="w-20 h-20 rounded-full border-4 border-pink-500 object-cover shadow-[0_0_20px_rgba(236,72,153,0.5)]"
-                  />
+                  <div className="relative p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
+                    <img 
+                      src={realValerieAvatar} 
+                      alt="VALERIE GURL Avatar" 
+                      className="w-20 h-20 rounded-full object-cover border-2 border-[#120d1d]"
+                    />
+                  </div>
+
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider">VALERIE GURL</h2>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-pink-950 text-pink-300 border border-pink-500/40 rounded-full">
+                      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]">
+                        VALERIE GURL
+                      </h2>
+                      <span className="px-2.5 py-1 text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-500/50 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.3)]">
                         Verified OG
                       </span>
                     </div>
-                    <p className="text-xs font-mono text-pink-400 mt-0.5">133LNO • The OG Party Host • Sunday City</p>
+                    <p className="text-xs font-mono text-pink-400 mt-1 font-semibold tracking-wide">
+                      133LNO • The OG Party Host • Sunday City
+                    </p>
                   </div>
                 </div>
 
-                <blockquote className="text-gray-300 text-sm leading-relaxed border-l-2 border-pink-500 pl-4 italic mb-8 bg-purple-950/20 py-2 rounded-r-lg">
+                <blockquote className="text-gray-300 text-sm leading-relaxed border-l-2 border-pink-500 pl-4 italic mb-8 bg-purple-950/20 py-2.5 rounded-r-lg">
                   "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!"
                 </blockquote>
 
@@ -303,7 +460,7 @@ export default function App() {
 
             </div>
 
-            {/* Right Card: Registration Form */}
+            {/* Right Card: Private Wave Registration Form */}
             <div className="lg:col-span-7 bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_30px_rgba(236,72,153,0.15)] flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -444,7 +601,7 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-[#120d1d] border border-pink-900/30 p-6 rounded-2xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400">
+              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 font-bold">
                 💎
               </div>
               <h4 className="font-bold text-white text-base">How Private Waves Work</h4>
@@ -456,7 +613,7 @@ export default function App() {
             </div>
 
             <div className="bg-[#120d1d] border border-pink-900/30 p-6 rounded-2xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400">
+              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 font-bold">
                 🛡️
               </div>
               <h4 className="font-bold text-white text-base">Hustle-Free Guarantee</h4>
@@ -468,7 +625,7 @@ export default function App() {
             </div>
 
             <div className="bg-[#120d1d] border border-pink-900/30 p-6 rounded-2xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400">
+              <div className="w-10 h-10 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 font-bold">
                 ⏰
               </div>
               <h4 className="font-bold text-white text-base">Live Host Schedule</h4>
@@ -520,7 +677,7 @@ export default function App() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white">Host Login</h3>
-              <p className="text-xs text-gray-400">VALERIE GURL's command center — authorize to manage wave registrations.</p>
+              <p className="text-xs text-gray-400">Authorize to access host command center.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
@@ -530,7 +687,7 @@ export default function App() {
                   type="text" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="valerie"
+                  placeholder="Enter username"
                   className="w-full bg-[#1a1329] border border-pink-900/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500"
                 />
               </div>
@@ -541,7 +698,7 @@ export default function App() {
                   type="password" 
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value)}
-                  placeholder="Enter host passcode (admin123)"
+                  placeholder="Enter passcode"
                   className="w-full bg-[#1a1329] border border-pink-900/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500"
                 />
               </div>
