@@ -99,7 +99,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0b0813] text-gray-100 font-sans selection:bg-pink-500 selection:text-white">
       
-      {/* Top Header Navbar */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-[#120d1d]/90 backdrop-blur-md border-b border-pink-900/30 px-4 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -153,11 +153,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {activeTab === 'dashboard' && isLoggedIn ? (
-          /* Admin Dashboard */
           <section className="bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-pink-900/30">
               <div>
@@ -236,10 +235,9 @@ export default function App() {
             </div>
           </section>
         ) : (
-          /* Public Hero Section: Left Profile + Right Registration Side-By-Side */
           <section id="booking" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
-            {/* Left Card: VALERIE GURL Profile */}
+            {/* Left Card */}
             <div className="lg:col-span-5 bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(236,72,153,0.15)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -265,7 +263,6 @@ export default function App() {
                   "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!"
                 </blockquote>
 
-                {/* Stats Counter Boxes */}
                 <div className="grid grid-cols-3 gap-3 mb-8" id="stats">
                   <div className="bg-[#1a1329] border border-pink-900/30 p-3 rounded-xl text-center">
                     <Trophy className="w-5 h-5 text-amber-400 mx-auto mb-1" />
@@ -287,7 +284,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Discord Action Buttons */}
               <div className="space-y-3 pt-4 border-t border-pink-900/30">
                 <div className="flex items-center gap-3">
                   <a 
@@ -307,7 +303,7 @@ export default function App() {
 
             </div>
 
-            {/* Right Card: Private Wave Registration Form */}
+            {/* Right Card: Registration Form */}
             <div className="lg:col-span-7 bg-[#120d1d] border border-pink-500/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_30px_rgba(236,72,153,0.15)] flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -380,7 +376,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Screenshot Upload */}
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-medium text-gray-300">Gems Proof</label>
@@ -415,7 +410,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Total Gem Bar */}
                     <div className="bg-[#1a1329] border border-pink-500/20 p-3 rounded-xl flex items-center justify-between text-sm">
                       <span className="text-gray-300 font-medium">Total for your waves:</span>
                       <span className="text-lg font-black text-pink-400 flex items-center gap-1">
@@ -486,7 +480,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* Section 3: Join Discord Direct Banner */}
+        {/* Section 3: Discord Direct Banner */}
         <section className="bg-gradient-to-r from-purple-950/60 to-pink-950/60 border border-pink-500/30 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <span className="px-3 py-1 bg-pink-950 text-pink-300 text-[10px] font-bold rounded-full border border-pink-500/30">
