@@ -34,8 +34,8 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [passcode, setPasscode] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('booking'); // 'booking' | 'dashboard'
-  const [adminViewTab, setAdminViewTab] = useState('active'); // 'active' | 'deleted'
+  const [activeTab, setActiveTab] = useState('booking');
+  const [adminViewTab, setAdminViewTab] = useState('active');
   
   const [hostedParties, setHostedParties] = useState(() => {
     const saved = localStorage.getItem('valerie_hosted_parties');
@@ -500,7 +500,6 @@ export default function App() {
 
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  {/* Fixed Round Perfect Circle Avatar (No Oval/Stretching) */}
                   <div className="relative w-20 h-20 flex-shrink-0 p-1 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.8)]">
                     <img 
                       src={realValerieAvatar} 
@@ -623,11 +622,11 @@ export default function App() {
                           onChange={(e) => setWavesCount(e.target.value)}
                           className="w-full bg-[#1a1329] border border-pink-900/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500"
                         >
-                          <option value={1}>1 Wave</option>
-                          <option value={2}>2 Waves</option>
-                          <option value={3}>3 Waves</option>
-                          <option value={5}>5 Waves</option>
-                          <option value={10}>10 Waves</option>
+                          {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => (
+                            <option key={num} value={num}>
+                              {num} {num === 1 ? 'Wave' : 'Waves'}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
