@@ -27,7 +27,12 @@ import {
   Type,
   RefreshCw,
   Wifi,
-  AlertCircle
+  AlertCircle,
+  Crown,
+  Star,
+  Zap,
+  Smile,
+  Sliders
 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION ---
@@ -62,9 +67,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
 
-  // --- DEFAULT DYNAMIC THEME & COLORS ---
+  // --- DEFAULT DYNAMIC THEME ---
   const defaultTheme = {
-    fontFamily: 'sans-serif',
+    fontFamily: 'Inter, sans-serif',
     headerBg: '#59ffe5',
     headerText: '#111827',
     profileBoxBg: '#fff0f6',
@@ -79,12 +84,21 @@ export default function App() {
     pageBg: '#ffffff',
     primaryBtnBg: '#111827',
     primaryBtnText: '#ffffff',
-    hostTitleColor: '#db2777'
+    
+    // Button Border Settings
+    btnBorderWidth: '2px',
+    btnBorderColor: '#111827',
+    btnBorderStyle: 'solid',
+    btnBorderRadius: '16px',
+
+    // Letter by Letter Name Colors
+    nameLetterColors: ['#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea']
   };
 
   // --- DEFAULT DYNAMIC CONTENT ---
   const defaultSiteContent = {
     brandName: "-VALERIE GURL-",
+    selectedSymbol: "👑",
     hostSubtag: "133LNO • The OG Party Host • Sunday City",
     hostBio: "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!",
     wavesTimingText: "Waves 15:00–19:00 UTC",
@@ -129,8 +143,8 @@ export default function App() {
     onValue(themeRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        setTheme(data);
-        setEditThemeForm(data);
+        setTheme({ ...defaultTheme, ...data });
+        setEditThemeForm({ ...defaultTheme, ...data });
       }
     });
 
@@ -149,8 +163,8 @@ export default function App() {
     onValue(contentRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        setSiteContent(data);
-        setEditContentForm(data);
+        setSiteContent({ ...defaultSiteContent, ...data });
+        setEditContentForm({ ...defaultSiteContent, ...data });
       }
     });
 
@@ -199,7 +213,6 @@ export default function App() {
     }
   };
 
-  // Mandatory Validation check for form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!gameName.trim()) {
@@ -287,19 +300,19 @@ export default function App() {
   const handleSaveDynamicContent = (e) => {
     e.preventDefault();
     set(ref(db, 'valerie_site/siteContent'), editContentForm);
-    showTempMsg("Dynamic site content synced to cloud!");
+    showTempMsg("Dynamic content & symbols synced to cloud!");
   };
 
   const handleSaveTheme = (e) => {
     e.preventDefault();
     set(ref(db, 'valerie_site/theme'), editThemeForm);
-    showTempMsg("Colors, Buttons & Fonts synced across all browsers!");
+    showTempMsg("Colors, Button Borders & Letter Colors synced to cloud!");
   };
 
   const handleResetTheme = () => {
     set(ref(db, 'valerie_site/theme'), defaultTheme);
     setEditThemeForm(defaultTheme);
-    showTempMsg("Theme reset to defaults!");
+    showTempMsg("Theme reset to default!");
   };
 
   const showTempMsg = (msg) => {
@@ -307,13 +320,64 @@ export default function App() {
     setTimeout(() => setSaveSuccessMsg(''), 3500);
   };
 
+  const handleLetterColorChange = (index, color) => {
+    const newColors = [...(editThemeForm.nameLetterColors || [])];
+    newColors[index] = color;
+    setEditThemeForm({ ...editThemeForm, nameLetterColors: newColors });
+  };
+
+  // Dynamic Multi-Color Letter-by-Letter Brand Name Renderer
+  const RenderDynamicBrandName = ({ name, fontSize = "text-xl sm:text-2xl" }) => {
+    const colors = theme.nameLetterColors || defaultTheme.nameLetterColors;
+    const letters = name.split('');
+    return (
+      <span className={`font-black tracking-wide inline-flex items-center ${fontSize}`}>
+        {letters.map((char, index) => {
+          const color = colors[index % colors.length] || '#db2777';
+          return (
+            <span key={index} style={{ color: color }}>
+              {char === ' ' ? ' ' : char}
+            </span>
+          );
+        })}
+      </span>
+    );
+  };
+
+  // Helper for Button Dynamic Border Styles
+  const buttonBorderStyle = {
+    backgroundColor: theme.primaryBtnBg,
+    color: theme.primaryBtnText,
+    borderWidth: theme.btnBorderWidth || '2px',
+    borderColor: theme.btnBorderColor || '#111827',
+    borderStyle: theme.btnBorderStyle || 'solid',
+    borderRadius: theme.btnBorderRadius || '16px'
+  };
+
+  // Expanded Symbol Options
+  const symbolList = ["👑", "💎", "🔥", "⚡", "✨", "🛡️", "⭐", "🏆", "🌟", "🌸", "💖", "🎮", "🚀", "💥", "🎯"];
+
+  // Expanded Fonts Collection
+  const fontOptions = [
+    { name: "Modern Sans-Serif (Inter)", value: "'Inter', sans-serif" },
+    { name: "Clean Geometric (Poppins)", value: "'Poppins', sans-serif" },
+    { name: "Bold & Sleek (Montserrat)", value: "'Montserrat', sans-serif" },
+    { name: "High Contrast Elegant (Playfair)", value: "'Playfair Display', serif" },
+    { name: "Coding Monospace (Fira Code)", value: "'Fira Code', monospace" },
+    { name: "Retro Pixel Gaming (Press Start 2P)", value: "'Press Start 2P', cursive" },
+    { name: "Futuristic (Outfit)", value: "'Outfit', sans-serif" },
+    { name: "Handcrafted Cursive (Pacifico)", value: "'Pacifico', cursive" },
+    { name: "Classic Serif (Georgia)", value: "Georgia, serif" },
+    { name: "Native System UI", value: "system-ui, -apple-system, sans-serif" }
+  ];
+
   return (
     <div 
       className="min-h-screen text-gray-900 selection:bg-pink-200 selection:text-pink-900"
       style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}
     >
       
-      {/* 1. Header Navbar */}
+      {/* 1. Top Header */}
       <header 
         className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2" 
         style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: 'rgba(0,0,0,0.15)' }}
@@ -333,9 +397,10 @@ export default function App() {
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
             </div>
             <div>
-              <h1 className="font-black text-base sm:text-lg tracking-wide" style={{ color: theme.hostTitleColor }}>
-                {siteContent.brandName}
-              </h1>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">{siteContent.selectedSymbol}</span>
+                <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-base sm:text-lg" />
+              </div>
               <p className="text-xs font-mono font-bold flex items-center gap-1" style={{ color: theme.headerText }}>
                 <Wifi className="w-3 h-3 text-emerald-600 animate-pulse" /> LIVE CLOUD SYNC
               </p>
@@ -360,16 +425,16 @@ export default function App() {
             {isLoggedIn ? (
               <button 
                 onClick={() => setActiveTab(activeTab === 'dashboard' ? 'booking' : 'dashboard')}
-                style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-                className="px-4 py-2 text-xs font-black rounded-xl transition-all shadow-sm hover:opacity-90"
+                style={buttonBorderStyle}
+                className="px-4 py-2 text-xs font-black transition-all shadow-sm hover:opacity-90"
               >
                 {activeTab === 'dashboard' ? 'View Website' : 'Admin Dashboard'}
               </button>
             ) : (
               <button 
                 onClick={() => setShowLoginModal(true)}
-                style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-sm hover:opacity-90"
+                style={buttonBorderStyle}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all shadow-sm hover:opacity-90"
               >
                 <LogIn className="w-3.5 h-3.5" /> Host Login
               </button>
@@ -395,7 +460,7 @@ export default function App() {
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                   <ShieldCheck className="text-pink-600" /> COMMAND CENTER (FIREBASE CLOUD SYNC)
                 </h2>
-                <p className="text-xs text-gray-600 font-bold">Every parameter edited here updates in real time globally.</p>
+                <p className="text-xs text-gray-600 font-bold">Customize every single letter color, button borders, fonts, and symbols.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -428,7 +493,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Palette className="w-3.5 h-3.5" /> Full Color, Buttons & Font Customizer
+                <Palette className="w-3.5 h-3.5" /> Colors, Letter Colors & Button Borders
               </button>
 
               <button 
@@ -439,7 +504,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" /> Brand Name & Text Editor
+                <Globe className="w-3.5 h-3.5" /> Brand Name, Fonts & Symbols
               </button>
 
               <button 
@@ -576,15 +641,15 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: FULL COLOR & BUTTON CUSTOMIZER */}
+            {/* TAB 2: LETTER BY LETTER COLORS & BUTTON BORDER CUSTOMIZER */}
             {adminViewTab === 'theme' && (
-              <form onSubmit={handleSaveTheme} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
+              <form onSubmit={handleSaveTheme} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-8 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <Palette className="text-indigo-600" /> Complete Dynamic Styling & Customizer
+                      <Palette className="text-indigo-600" /> Letter-by-Letter Colors & Button Border Settings
                     </h3>
-                    <p className="text-xs text-gray-600 font-bold">Customize every single color, button style, and font globally.</p>
+                    <p className="text-xs text-gray-600 font-bold">Assign different colors to each letter of the brand name and configure button borders.</p>
                   </div>
                   <button 
                     type="button" 
@@ -595,22 +660,100 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Font Selector */}
-                <div className="bg-indigo-50/60 p-4 rounded-xl border border-indigo-200 space-y-2">
-                  <label className="block text-xs font-black text-indigo-900 flex items-center gap-1.5">
-                    <Type className="w-4 h-4" /> Website Font Family
-                  </label>
-                  <select 
-                    value={editThemeForm.fontFamily}
-                    onChange={(e) => setEditThemeForm({ ...editThemeForm, fontFamily: e.target.value })}
-                    className="w-full bg-white border border-indigo-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="sans-serif">Modern Sans-Serif (Default)</option>
-                    <option value="system-ui">System UI (Clean & Crisp)</option>
-                    <option value="serif">Classic Serif</option>
-                    <option value="monospace">Retro Monospace</option>
-                    <option value="cursive">Fancy Handcrafted</option>
-                  </select>
+                {/* --- 1. LETTER BY LETTER COLOR CUSTOMIZER --- */}
+                <div className="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 border-2 border-pink-200 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-black text-gray-900 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-pink-600" /> Letter-by-Letter Name Color Picker
+                      </h4>
+                      <p className="text-xs text-gray-600">Click on each letter's color box to give every single character a distinct color!</p>
+                    </div>
+                    <div className="px-3 py-1 bg-white rounded-xl border border-pink-200 shadow-sm">
+                      <span className="text-xs text-gray-500 font-bold mr-2">Live Preview:</span>
+                      <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-lg" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    {siteContent.brandName.split('').map((char, idx) => (
+                      <div key={idx} className="bg-white border border-pink-300 rounded-xl p-2 flex flex-col items-center gap-1.5 shadow-sm">
+                        <span className="text-sm font-black text-gray-900">{char === ' ' ? 'Space' : char}</span>
+                        <input 
+                          type="color" 
+                          value={(editThemeForm.nameLetterColors || [])[idx] || '#db2777'} 
+                          onChange={(e) => handleLetterColorChange(idx, e.target.value)}
+                          className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* --- 2. ALL CLICK BUTTON BORDER SETTINGS --- */}
+                <div className="bg-indigo-50/70 border-2 border-indigo-200 rounded-2xl p-5 space-y-4">
+                  <h4 className="text-sm font-black text-indigo-900 flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-indigo-600" /> All Clickable Buttons Border Controls
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Border Width</label>
+                      <select 
+                        value={editThemeForm.btnBorderWidth}
+                        onChange={(e) => setEditThemeForm({ ...editThemeForm, btnBorderWidth: e.target.value })}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                      >
+                        <option value="0px">None (0px)</option>
+                        <option value="1px">Thin (1px)</option>
+                        <option value="2px">Standard (2px)</option>
+                        <option value="3px">Thick (3px)</option>
+                        <option value="4px">Extra Thick (4px)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Border Color</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.btnBorderColor}
+                          onChange={(e) => setEditThemeForm({ ...editThemeForm, btnBorderColor: e.target.value })}
+                          className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <span className="text-xs font-mono text-gray-700">{editThemeForm.btnBorderColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Border Style</label>
+                      <select 
+                        value={editThemeForm.btnBorderStyle}
+                        onChange={(e) => setEditThemeForm({ ...editThemeForm, btnBorderStyle: e.target.value })}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                      >
+                        <option value="solid">Solid</option>
+                        <option value="dashed">Dashed</option>
+                        <option value="dotted">Dotted</option>
+                        <option value="double">Double</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Corner Radius</label>
+                      <select 
+                        value={editThemeForm.btnBorderRadius}
+                        onChange={(e) => setEditThemeForm({ ...editThemeForm, btnBorderRadius: e.target.value })}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                      >
+                        <option value="4px">Square (4px)</option>
+                        <option value="10px">Rounded (10px)</option>
+                        <option value="16px">Pill / Soft (16px)</option>
+                        <option value="9999px">Fully Pill (9999px)</option>
+                      </select>
+                    </div>
+
+                  </div>
                 </div>
 
                 {/* Color Pickers Grid */}
@@ -618,9 +761,9 @@ export default function App() {
                   
                   {/* Buttons Customization */}
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Main Buttons Styling</h4>
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Button Colors</h4>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Button Background</label>
+                      <label className="text-xs text-gray-700 font-bold">Background</label>
                       <input 
                         type="color" 
                         value={editThemeForm.primaryBtnBg} 
@@ -629,7 +772,7 @@ export default function App() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Button Text Color</label>
+                      <label className="text-xs text-gray-700 font-bold">Text Color</label>
                       <input 
                         type="color" 
                         value={editThemeForm.primaryBtnText} 
@@ -639,21 +782,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Brand / Host Title Color */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Host Title / Brand Name Color</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Brand Title Color</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.hostTitleColor} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, hostTitleColor: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Navbar Header Color */}
+                  {/* Top Navbar Header */}
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
                     <h4 className="text-xs font-black text-gray-900 border-b pb-1">Top Navbar Header</h4>
                     <div className="flex items-center justify-between">
@@ -699,66 +828,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Right Wave Registration Box */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Wave Registration Box</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Background</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.regBoxBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, regBoxBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Border Color</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.regBoxBorder} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, regBoxBorder: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Party Rules Boxes */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Party Rules Cards</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Background</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.rulesBoxBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Border Color</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.rulesBoxBorder} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBorder: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Page Background */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Global Page Background</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Background Color</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.pageBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, pageBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
                 </div>
 
                 <div className="pt-2">
@@ -766,20 +835,59 @@ export default function App() {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <Save className="w-4 h-4" /> Save Theme to Cloud
+                    <Save className="w-4 h-4" /> Save Styling & Borders to Cloud
                   </button>
                 </div>
               </form>
             )}
 
-            {/* TAB 3: DYNAMIC BRAND & TEXT EDITOR */}
+            {/* TAB 3: BRAND NAME, FONTS & SYMBOLS EDITOR */}
             {adminViewTab === 'content' && (
               <form onSubmit={handleSaveDynamicContent} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
                 <div className="pb-3 border-b border-gray-200">
                   <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                    <FileText className="text-purple-600" /> Brand Name & Dynamic Text Editor
+                    <Globe className="text-purple-600" /> Brand Name, Fonts & Symbols Editor
                   </h3>
-                  <p className="text-xs text-gray-600 font-bold">Edit brand title, bio, timings, rules, and links dynamically.</p>
+                  <p className="text-xs text-gray-600 font-bold">Select from extended font families and symbol badges dynamically.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Font Family Selector */}
+                  <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-200 space-y-2">
+                    <label className="block text-xs font-black text-purple-900 flex items-center gap-1.5">
+                      <Type className="w-4 h-4" /> Expanded Fonts Collection
+                    </label>
+                    <select 
+                      value={editThemeForm.fontFamily}
+                      onChange={(e) => setEditThemeForm({ ...editThemeForm, fontFamily: e.target.value })}
+                      className="w-full bg-white border border-purple-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      {fontOptions.map((font, idx) => (
+                        <option key={idx} value={font.value}>{font.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Symbol Selector */}
+                  <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-200 space-y-2">
+                    <label className="block text-xs font-black text-purple-900 flex items-center gap-1.5">
+                      <Crown className="w-4 h-4" /> Selected Brand Symbol Badge
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select 
+                        value={editContentForm.selectedSymbol}
+                        onChange={(e) => setEditContentForm({ ...editContentForm, selectedSymbol: e.target.value })}
+                        className="w-full bg-white border border-purple-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        {symbolList.map((sym, idx) => (
+                          <option key={idx} value={sym}>{sym} Symbol</option>
+                        ))}
+                      </select>
+                      <span className="text-2xl p-1 bg-white border border-purple-300 rounded-xl">{editContentForm.selectedSymbol}</span>
+                    </div>
+                  </div>
+
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -812,69 +920,12 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                  <div>
-                    <label className="block text-xs font-black text-gray-900 mb-1">Navbar Wave Timing Tag</label>
-                    <input 
-                      type="text"
-                      value={editContentForm.wavesTimingText}
-                      onChange={(e) => setEditContentForm({...editContentForm, wavesTimingText: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-gray-900 mb-1">Parties in 1 Wave Stat</label>
-                    <input 
-                      type="text"
-                      value={editContentForm.maxPartiesSingleWave}
-                      onChange={(e) => setEditContentForm({...editContentForm, maxPartiesSingleWave: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
-                    />
-                  </div>
-                </div>
-
-                {/* Rules Customization */}
-                <div className="border-t border-gray-200 pt-4 space-y-4">
-                  <h4 className="text-xs font-black uppercase text-purple-700 tracking-wider">Party Rules Box 1</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input 
-                      type="text"
-                      value={editContentForm.rule1Bullet1}
-                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet1: e.target.value})}
-                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
-                    />
-                    <input 
-                      type="text"
-                      value={editContentForm.rule1Bullet2}
-                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet2: e.target.value})}
-                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
-                    />
-                    <input 
-                      type="text"
-                      value={editContentForm.rule1Bullet3}
-                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet3: e.target.value})}
-                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <label className="block text-xs font-black text-gray-900">Discord Banner Description</label>
-                  <textarea 
-                    rows={2}
-                    value={editContentForm.discordBannerText}
-                    onChange={(e) => setEditContentForm({...editContentForm, discordBannerText: e.target.value})}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
-                  />
-                </div>
-
                 <div className="pt-2">
                   <button 
                     type="submit"
                     className="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <Save className="w-4 h-4" /> Save All Content to Cloud
+                    <Save className="w-4 h-4" /> Save Content, Fonts & Symbols to Cloud
                   </button>
                 </div>
               </form>
@@ -952,9 +1003,8 @@ export default function App() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl sm:text-2xl font-black tracking-wide" style={{ color: theme.hostTitleColor }}>
-                        {siteContent.brandName}
-                      </h2>
+                      <span className="text-xl sm:text-2xl">{siteContent.selectedSymbol}</span>
+                      <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-xl sm:text-2xl" />
                       <span className="px-2.5 py-0.5 text-[10px] font-black bg-white text-pink-800 border border-pink-300 rounded-full shadow-sm whitespace-nowrap">
                         Verified OG
                       </span>
@@ -996,8 +1046,8 @@ export default function App() {
                     href={siteContent.discordUrl} 
                     target="_blank" 
                     rel="noreferrer"
-                    style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-sm rounded-2xl transition-all shadow-md hover:opacity-90"
+                    style={buttonBorderStyle}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-sm transition-all shadow-md hover:opacity-90"
                   >
                     <MessageSquare className="w-4 h-4" /> Chat with Host
                   </a>
@@ -1133,8 +1183,8 @@ export default function App() {
 
                     <button 
                       type="submit"
-                      style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-                      className="w-full py-4 font-black text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 hover:opacity-90"
+                      style={buttonBorderStyle}
+                      className="w-full py-4 font-black text-sm transition-all shadow-md flex items-center justify-center gap-2 hover:opacity-90"
                     >
                       <Sparkles className="w-4 h-4" /> Submit Registration
                     </button>
@@ -1162,7 +1212,7 @@ export default function App() {
               className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
               style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
             >
-              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
+              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm text-xl">
                 💎
               </div>
               <h4 className="font-black text-gray-900 text-base">{siteContent.rule1Title}</h4>
@@ -1177,7 +1227,7 @@ export default function App() {
               className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
               style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
             >
-              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
+              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm text-xl">
                 🛡️
               </div>
               <h4 className="font-black text-gray-900 text-base">{siteContent.rule2Title}</h4>
@@ -1192,7 +1242,7 @@ export default function App() {
               className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
               style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
             >
-              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
+              <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm text-xl">
                 ⏰
               </div>
               <h4 className="font-black text-gray-900 text-base">{siteContent.rule3Title}</h4>
@@ -1220,8 +1270,8 @@ export default function App() {
             href={siteContent.discordUrl} 
             target="_blank" 
             rel="noreferrer"
-            style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-            className="px-6 py-3.5 font-black text-sm rounded-2xl transition-all shadow-md flex items-center gap-2 whitespace-nowrap hover:opacity-90"
+            style={buttonBorderStyle}
+            className="px-6 py-3.5 font-black text-sm transition-all shadow-md flex items-center gap-2 whitespace-nowrap hover:opacity-90"
           >
             <MessageSquare className="w-4 h-4" /> Open Discord Profile
           </a>
@@ -1273,8 +1323,8 @@ export default function App() {
 
               <button 
                 type="submit"
-                style={{ backgroundColor: theme.primaryBtnBg, color: theme.primaryBtnText }}
-                className="w-full py-3.5 font-black text-sm rounded-2xl transition-all shadow-md hover:opacity-90"
+                style={buttonBorderStyle}
+                className="w-full py-3.5 font-black text-sm transition-all shadow-md hover:opacity-90"
               >
                 Enter Command Center
               </button>
