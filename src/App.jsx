@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue } from "firebase/database";
 import { 
   ShieldCheck, 
   Sparkles, 
@@ -21,8 +23,28 @@ import {
   Save,
   Globe,
   FileText,
-  List
+  List,
+  Palette,
+  Type,
+  RefreshCw,
+  CloudSync,
+  Wifi
 } from 'lucide-react';
+
+// --- FIREBASE SETUP ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDh51seqBPH_kuMjTH_q5jOlLwKarJN1Ns",
+  authDomain: "valeriegurl-site.firebaseapp.com",
+  databaseURL: "https://valeriegurl-site-default-rtdb.firebaseio.com",
+  projectId: "valeriegurl-site",
+  storageBucket: "valeriegurl-site.firebasestorage.app",
+  messagingSenderId: "542854017871",
+  appId: "1:542854017871:web:e7d5e39591a4542e038b3a",
+  measurementId: "G-FS0TJS7YK9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 export default function App() {
   const [gameName, setGameName] = useState('');
@@ -40,15 +62,23 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
 
-  // --- 1. PERMANENT HOSTED PARTIES COUNT (Never resets automatically) ---
-  const [hostedParties, setHostedParties] = useState(() => {
-    const saved = localStorage.getItem('valerie_hosted_parties_v2');
-    return saved !== null ? saved : '2,130+';
-  });
-  const [newHostedCount, setNewHostedCount] = useState(hostedParties);
-  const [isEditingParties, setIsEditingParties] = useState(false);
+  // --- DEFAULT VALUES ---
+  const defaultTheme = {
+    fontFamily: 'sans-serif',
+    headerBg: '#59ffe5',
+    headerText: '#111827',
+    profileBoxBg: '#fff0f6',
+    profileBoxBorder: '#fbcfe8',
+    profileBoxText: '#111827',
+    regBoxBg: '#ff91f0',
+    regBoxBorder: '#f472b6',
+    regBoxText: '#111827',
+    rulesBoxBg: '#67daff',
+    rulesBoxBorder: '#38bdf8',
+    rulesBoxText: '#111827',
+    pageBg: '#ffffff'
+  };
 
-  // --- 2. PERMANENT DYNAMIC WEBSITE CONTENT (Never resets automatically) ---
   const defaultSiteContent = {
     hostBio: "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!",
     wavesTimingText: "Waves 15:00–19:00 UTC",
@@ -67,32 +97,6 @@ export default function App() {
     discordUrl: "https://discord.com/users/757598254668972065"
   };
 
-  const [siteContent, setSiteContent] = useState(() => {
-    const saved = localStorage.getItem('valerie_site_content_v2');
-    if (saved) {
-      try {
-        return { ...defaultSiteContent, ...JSON.parse(saved) };
-      } catch (e) {
-        return defaultSiteContent;
-      }
-    }
-    return defaultSiteContent;
-  });
-
-  const [editContentForm, setEditContentForm] = useState(siteContent);
-  const [contentSaveSuccess, setContentSaveSuccess] = useState(false);
-
-  // Save changes permanently whenever state changes
-  useEffect(() => {
-    localStorage.setItem('valerie_hosted_parties_v2', hostedParties);
-  }, [hostedParties]);
-
-  useEffect(() => {
-    localStorage.setItem('valerie_site_content_v2', JSON.stringify(siteContent));
-  }, [siteContent]);
-
-  const realValerieAvatar = "https://sunday-city-waves--00ko1l64.preview.static.emergentagent.com/valerie-avatar.jpeg";
-
   const defaultSubmissions = [
     { 
       id: 1, 
@@ -104,57 +108,78 @@ export default function App() {
       timestamp: '2026-11-01 14:15 UTC', 
       status: 'Pending', 
       screenshot: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80' 
-    },
-    { 
-      id: 2, 
-      name: 'CyberSamurai', 
-      tag: '133LNO', 
-      waves: 5, 
-      gems: 200, 
-      total: 1000, 
-      timestamp: '2026-11-01 13:40 UTC', 
-      status: 'Approved', 
-      screenshot: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80' 
-    },
-    { 
-      id: 3, 
-      name: 'PixelQueen', 
-      tag: '774AB', 
-      waves: 1, 
-      gems: 250, 
-      total: 250, 
-      timestamp: '2026-11-01 12:10 UTC', 
-      status: 'Completed', 
-      screenshot: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80' 
-    },
+    }
   ];
 
-  const [submissions, setSubmissions] = useState(() => {
-    const saved = localStorage.getItem('valerie_submissions_v2');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { return defaultSubmissions; }
-    }
-    return defaultSubmissions;
-  });
+  // --- STATE WITH FIREBASE SYNC ---
+  const [theme, setTheme] = useState(defaultTheme);
+  const [editThemeForm, setEditThemeForm] = useState(defaultTheme);
 
-  const [deletedSubmissions, setDeletedSubmissions] = useState(() => {
-    const saved = localStorage.getItem('valerie_deleted_submissions_v2');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { return []; }
-    }
-    return [];
-  });
+  const [hostedParties, setHostedParties] = useState('2,130+');
+  const [newHostedCount, setNewHostedCount] = useState('2,130+');
+  const [isEditingParties, setIsEditingParties] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('valerie_submissions_v2', JSON.stringify(submissions));
-  }, [submissions]);
+  const [siteContent, setSiteContent] = useState(defaultSiteContent);
+  const [editContentForm, setEditContentForm] = useState(defaultSiteContent);
 
-  useEffect(() => {
-    localStorage.setItem('valerie_deleted_submissions_v2', JSON.stringify(deletedSubmissions));
-  }, [deletedSubmissions]);
+  const [submissions, setSubmissions] = useState(defaultSubmissions);
+  const [deletedSubmissions, setDeletedSubmissions] = useState([]);
 
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
+  // --- REAL-TIME LISTENERS FROM FIREBASE ---
+  useEffect(() => {
+    // Listen to Theme
+    const themeRef = ref(db, 'valerie_site/theme');
+    onValue(themeRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setTheme(data);
+        setEditThemeForm(data);
+      }
+    });
+
+    // Listen to Hosted Count
+    const hostedRef = ref(db, 'valerie_site/hostedParties');
+    onValue(hostedRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data !== null) {
+        setHostedParties(data);
+        setNewHostedCount(data);
+      }
+    });
+
+    // Listen to Site Content
+    const contentRef = ref(db, 'valerie_site/siteContent');
+    onValue(contentRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setSiteContent(data);
+        setEditContentForm(data);
+      }
+    });
+
+    // Listen to Submissions
+    const subRef = ref(db, 'valerie_site/submissions');
+    onValue(subRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setSubmissions(data);
+      }
+    });
+
+    // Listen to Deleted Submissions
+    const delRef = ref(db, 'valerie_site/deletedSubmissions');
+    onValue(delRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setDeletedSubmissions(data);
+      }
+    });
+  }, []);
+
+  const realValerieAvatar = "https://sunday-city-waves--00ko1l64.preview.static.emergentagent.com/valerie-avatar.jpeg";
   const totalGems = (parseInt(wavesCount) || 0) * (parseInt(gemsPerWave) || 0);
 
   const getCurrentUTCTime = () => {
@@ -196,7 +221,8 @@ export default function App() {
       screenshot: proofPreview || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80'
     };
     
-    setSubmissions([newEntry, ...submissions]);
+    const updated = [newEntry, ...submissions];
+    set(ref(db, 'valerie_site/submissions'), updated);
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -219,36 +245,58 @@ export default function App() {
   };
 
   const updateStatus = (id, newStatus) => {
-    setSubmissions(submissions.map(sub => sub.id === id ? { ...sub, status: newStatus } : sub));
+    const updated = submissions.map(sub => sub.id === id ? { ...sub, status: newStatus } : sub);
+    set(ref(db, 'valerie_site/submissions'), updated);
   };
 
   const handleDeleteRequest = (id) => {
     const itemToDelete = submissions.find(sub => sub.id === id);
     if (itemToDelete) {
-      setSubmissions(submissions.filter(sub => sub.id !== id));
-      setDeletedSubmissions([{ ...itemToDelete, deletedAt: getCurrentUTCTime() }, ...deletedSubmissions]);
+      const newActive = submissions.filter(sub => sub.id !== id);
+      const newDeleted = [{ ...itemToDelete, deletedAt: getCurrentUTCTime() }, ...deletedSubmissions];
+      set(ref(db, 'valerie_site/submissions'), newActive);
+      set(ref(db, 'valerie_site/deletedSubmissions'), newDeleted);
     }
   };
 
   const handleRestoreRequest = (id) => {
     const itemToRestore = deletedSubmissions.find(sub => sub.id === id);
     if (itemToRestore) {
-      setDeletedSubmissions(deletedSubmissions.filter(sub => sub.id !== id));
-      setSubmissions([itemToRestore, ...submissions]);
+      const newDeleted = deletedSubmissions.filter(sub => sub.id !== id);
+      const newActive = [itemToRestore, ...submissions];
+      set(ref(db, 'valerie_site/deletedSubmissions'), newDeleted);
+      set(ref(db, 'valerie_site/submissions'), newActive);
     }
   };
 
   const handleSaveHostedParties = (e) => {
     e.preventDefault();
-    setHostedParties(newHostedCount);
+    set(ref(db, 'valerie_site/hostedParties'), newHostedCount);
     setIsEditingParties(false);
+    showTempMsg("Hosted count synced to all devices!");
   };
 
   const handleSaveDynamicContent = (e) => {
     e.preventDefault();
-    setSiteContent(editContentForm);
-    setContentSaveSuccess(true);
-    setTimeout(() => setContentSaveSuccess(false), 3000);
+    set(ref(db, 'valerie_site/siteContent'), editContentForm);
+    showTempMsg("Website content synced globally!");
+  };
+
+  const handleSaveTheme = (e) => {
+    e.preventDefault();
+    set(ref(db, 'valerie_site/theme'), editThemeForm);
+    showTempMsg("Colors & Font synced globally across all browsers!");
+  };
+
+  const handleResetTheme = () => {
+    set(ref(db, 'valerie_site/theme'), defaultTheme);
+    setEditThemeForm(defaultTheme);
+    showTempMsg("Theme reset to default!");
+  };
+
+  const showTempMsg = (msg) => {
+    setSaveSuccessMsg(msg);
+    setTimeout(() => setSaveSuccessMsg(''), 3500);
   };
 
   const CustomStyledName = ({ fontSize = "text-2xl sm:text-3xl" }) => (
@@ -271,10 +319,16 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-pink-200 selection:text-pink-900">
+    <div 
+      className="min-h-screen text-gray-900 selection:bg-pink-200 selection:text-pink-900"
+      style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}
+    >
       
-      {/* Header Navbar with SOLID #59ffe5 */}
-      <header className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2 border-teal-300" style={{ backgroundColor: '#59ffe5' }}>
+      {/* 1. Header Navbar with Dynamic Color & Text */}
+      <header 
+        className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2" 
+        style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: 'rgba(0,0,0,0.15)' }}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 flex-shrink-0">
@@ -291,15 +345,17 @@ export default function App() {
             </div>
             <div>
               <CustomStyledName fontSize="text-base sm:text-lg" />
-              <p className="text-xs text-gray-900 font-mono font-bold">133LNO • OG HOST</p>
+              <p className="text-xs font-mono font-bold flex items-center gap-1" style={{ color: theme.headerText }}>
+                <Wifi className="w-3 h-3 text-emerald-600 animate-pulse" /> 133LNO • LIVE SYNC
+              </p>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-gray-900">
-            <a href="#booking" onClick={() => setActiveTab('booking')} className="hover:text-pink-700 transition-colors">Wave Booking</a>
-            <a href="#rules" className="hover:text-pink-700 transition-colors">Party Rules</a>
-            <a href="#stats" className="hover:text-pink-700 transition-colors">Host Stats</a>
-            <a href={siteContent.discordUrl} target="_blank" rel="noreferrer" className="hover:text-pink-700 transition-colors flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold" style={{ color: theme.headerText }}>
+            <a href="#booking" onClick={() => setActiveTab('booking')} className="hover:opacity-80 transition-opacity">Wave Booking</a>
+            <a href="#rules" className="hover:opacity-80 transition-opacity">Party Rules</a>
+            <a href="#stats" className="hover:opacity-80 transition-opacity">Host Stats</a>
+            <a href={siteContent.discordUrl} target="_blank" rel="noreferrer" className="hover:opacity-80 transition-opacity flex items-center gap-1">
               Discord <ExternalLink className="w-3 h-3" />
             </a>
           </nav>
@@ -332,15 +388,21 @@ export default function App() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
+        {saveSuccessMsg && (
+          <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white font-black px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
+            <CheckCircle2 className="w-5 h-5" /> {saveSuccessMsg}
+          </div>
+        )}
+
         {activeTab === 'dashboard' && isLoggedIn ? (
-          /* Admin Dashboard & Dynamic Content Manager */
+          /* Admin Dashboard & Firebase Sync Manager */
           <section className="bg-pink-50 border-2 border-pink-200 rounded-3xl p-6 shadow-md space-y-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-200">
               <div>
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                  <ShieldCheck className="text-pink-600" /> VALERIE GURL COMMAND CENTER
+                  <ShieldCheck className="text-pink-600" /> VALERIE GURL COMMAND CENTER (FIREBASE CLOUD)
                 </h2>
-                <p className="text-xs text-gray-600 font-bold">Manage real-time party wave registrations & edit website dynamic content.</p>
+                <p className="text-xs text-gray-600 font-bold">Changes made here instantly sync globally across all visitors and browsers.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -352,8 +414,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Admin View Selection Tabs */}
-            <div className="flex items-center gap-4 border-b border-pink-200 pb-3 overflow-x-auto">
+            {/* Admin Navigation Tabs */}
+            <div className="flex items-center gap-3 border-b border-pink-200 pb-3 overflow-x-auto">
               <button 
                 onClick={() => setAdminViewTab('active')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
@@ -362,7 +424,18 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <List className="w-3.5 h-3.5" /> Active Registrations ({submissions.length})
+                <List className="w-3.5 h-3.5" /> Registrations ({submissions.length})
+              </button>
+
+              <button 
+                onClick={() => setAdminViewTab('theme')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'theme' 
+                    ? 'bg-indigo-600 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5" /> Color & Font Customizer
               </button>
 
               <button 
@@ -373,7 +446,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" /> Dynamic Content & Text Manager
+                <Globe className="w-3.5 h-3.5" /> Dynamic Content Editor
               </button>
 
               <button 
@@ -384,17 +457,17 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <History className="w-3.5 h-3.5" /> Deleted History ({deletedSubmissions.length})
+                <History className="w-3.5 h-3.5" /> Deleted ({deletedSubmissions.length})
               </button>
             </div>
 
-            {/* HOST STATS UPDATE (PERMANENT) */}
+            {/* HOST STATS UPDATE (FIREBASE CLOUD SYNC) */}
             <div className="bg-white border-2 border-pink-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <Trophy className="w-6 h-6 text-amber-500" />
                 <div>
-                  <h4 className="text-sm font-black text-gray-900">Total Hosted Parties Count (Permanent)</h4>
-                  <p className="text-xs text-gray-600">Currently live: <span className="text-pink-600 font-black">{hostedParties}</span> (saved permanently in storage).</p>
+                  <h4 className="text-sm font-black text-gray-900">Total Hosted Parties Count (Cloud Synced)</h4>
+                  <p className="text-xs text-gray-600">Currently live: <span className="text-pink-600 font-black">{hostedParties}</span> (Synced across all devices).</p>
                 </div>
               </div>
 
@@ -411,7 +484,7 @@ export default function App() {
                     type="submit"
                     className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-black"
                   >
-                    <Save className="w-3.5 h-3.5" /> Save Permanently
+                    <Save className="w-3.5 h-3.5" /> Save to Cloud
                   </button>
                   <button 
                     type="button"
@@ -426,12 +499,12 @@ export default function App() {
                   onClick={() => { setNewHostedCount(hostedParties); setIsEditingParties(true); }}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-100 hover:bg-pink-200 border border-pink-300 text-pink-800 text-xs font-black rounded-lg transition-all"
                 >
-                  <Edit3 className="w-3.5 h-3.5" /> Edit Total Hosted Parties
+                  <Edit3 className="w-3.5 h-3.5" /> Edit Total Count
                 </button>
               )}
             </div>
 
-            {/* TAB 1: ACTIVE REGISTRATIONS */}
+            {/* TAB 1: REGISTRATIONS */}
             {adminViewTab === 'active' && (
               <div className="overflow-x-auto bg-white rounded-2xl border-2 border-pink-200 p-2 shadow-sm">
                 <table className="w-full text-left text-sm text-gray-700">
@@ -510,22 +583,173 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: DYNAMIC CONTENT MANAGER */}
-            {adminViewTab === 'content' && (
-              <form onSubmit={handleSaveDynamicContent} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
+            {/* TAB 2: COLOR & FONT CUSTOMIZER */}
+            {adminViewTab === 'theme' && (
+              <form onSubmit={handleSaveTheme} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <FileText className="text-purple-600" /> Website Dynamic Content Editor
+                      <Palette className="text-indigo-600" /> Full Dynamic Color & Font Customizer (Cloud Synced)
                     </h3>
-                    <p className="text-xs text-gray-600 font-medium">Yahan se aap jo bhi write/update karoge vo permanent site par change ho jayega!</p>
+                    <p className="text-xs text-gray-600 font-bold">Har ek browser aur device par same color aur font dikhega!</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleResetTheme}
+                    className="flex items-center gap-1 text-xs text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200 font-bold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Reset Default Colors
+                  </button>
+                </div>
+
+                {/* Font Selector */}
+                <div className="bg-indigo-50/60 p-4 rounded-xl border border-indigo-200 space-y-2">
+                  <label className="block text-xs font-black text-indigo-900 flex items-center gap-1.5">
+                    <Type className="w-4 h-4" /> Select Website Font Family
+                  </label>
+                  <select 
+                    value={editThemeForm.fontFamily}
+                    onChange={(e) => setEditThemeForm({ ...editThemeForm, fontFamily: e.target.value })}
+                    className="w-full bg-white border border-indigo-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="sans-serif">Modern Sans-Serif (Default Clean)</option>
+                    <option value="system-ui">System UI (Native Crisp)</option>
+                    <option value="serif">Classic Serif (Elegant)</option>
+                    <option value="monospace">Coding Monospace (Techy/Retro)</option>
+                    <option value="cursive">Fancy Handcrafted (Creative)</option>
+                  </select>
+                </div>
+
+                {/* Color Pickers Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  
+                  {/* Header Color */}
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Top Header / Navbar</h4>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Background</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.headerBg} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, headerBg: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Text Color</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.headerText} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, headerText: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
                   </div>
 
-                  {contentSaveSuccess && (
-                    <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-black rounded-lg animate-bounce">
-                      ✓ Changes Saved Permanently!
-                    </span>
-                  )}
+                  {/* Left Profile Box */}
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Host Profile Card (Left)</h4>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Background</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.profileBoxBg} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBg: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Border Color</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.profileBoxBorder} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBorder: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Wave Registration Box */}
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Wave Registration Box (Right)</h4>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Background</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.regBoxBg} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, regBoxBg: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Border Color</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.regBoxBorder} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, regBoxBorder: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Party Rules Boxes */}
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Party Rules Cards (3 Boxes)</h4>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Background</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.rulesBoxBg} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBg: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Border Color</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.rulesBoxBorder} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBorder: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Global Page Background */}
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Website Page Background</h4>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-gray-700 font-bold">Background Color</label>
+                      <input 
+                        type="color" 
+                        value={editThemeForm.pageBg} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, pageBg: e.target.value})}
+                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> Save Colors & Font to Cloud
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: DYNAMIC CONTENT MANAGER */}
+            {adminViewTab === 'content' && (
+              <form onSubmit={handleSaveDynamicContent} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
+                <div className="pb-3 border-b border-gray-200">
+                  <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                    <FileText className="text-purple-600" /> Website Dynamic Content & Text Editor (Cloud Synced)
+                  </h3>
+                  <p className="text-xs text-gray-600 font-bold">Yahan se jo bhi text edit karoge, wo saari duniya me live update ho jayega!</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -607,7 +831,7 @@ export default function App() {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <label className="block text-xs font-black text-gray-900">Discord Banner Announcement Text</label>
+                  <label className="block text-xs font-black text-gray-900">Discord Banner Text</label>
                   <textarea 
                     rows={2}
                     value={editContentForm.discordBannerText}
@@ -621,13 +845,13 @@ export default function App() {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <Save className="w-4 h-4" /> Save Website Dynamic Content
+                    <Save className="w-4 h-4" /> Save Content to Cloud
                   </button>
                 </div>
               </form>
             )}
 
-            {/* TAB 3: DELETED HISTORY */}
+            {/* TAB 4: DELETED HISTORY */}
             {adminViewTab === 'deleted' && (
               <div className="overflow-x-auto bg-white rounded-2xl border-2 border-pink-200 p-2 shadow-sm">
                 <table className="w-full text-left text-sm text-gray-700">
@@ -676,8 +900,11 @@ export default function App() {
           /* Public Hero Section */
           <section id="booking" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
-            {/* Left Card: VALERIE GURL Profile (Soft Pink Box) */}
-            <div className="lg:col-span-5 border-2 border-pink-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative overflow-hidden" style={{ backgroundColor: '#fff0f6' }}>
+            {/* Left Card: VALERIE GURL Profile */}
+            <div 
+              className="lg:col-span-5 border-2 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative overflow-hidden" 
+              style={{ backgroundColor: theme.profileBoxBg, borderColor: theme.profileBoxBorder }}
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-pink-300/30 rounded-full blur-3xl pointer-events-none"></div>
 
               <div>
@@ -751,8 +978,11 @@ export default function App() {
 
             </div>
 
-            {/* Right Card: Private Wave Registration Form (HEX COLOR #ff91f0 STRICTLY APPLIED) */}
-            <div className="lg:col-span-7 border-2 border-pink-400 rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col justify-between" style={{ backgroundColor: '#ff91f0' }}>
+            {/* Right Card: Private Wave Registration Form */}
+            <div 
+              className="lg:col-span-7 border-2 rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col justify-between" 
+              style={{ backgroundColor: theme.regBoxBg, borderColor: theme.regBoxBorder }}
+            >
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="w-6 h-6 text-gray-900" />
@@ -883,7 +1113,7 @@ export default function App() {
           </section>
         )}
 
-        {/* Section 2: Party Rules (HEX COLOR #67daff STRICTLY APPLIED TO ALL 3 BOXES) */}
+        {/* Section 2: Party Rules */}
         <section id="rules" className="space-y-4">
           <div>
             <p className="text-xs font-mono uppercase text-sky-600 tracking-wider font-bold">HOW IT WORKS</p>
@@ -891,7 +1121,10 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="border-2 border-sky-400 p-6 rounded-3xl space-y-3 shadow-md" style={{ backgroundColor: '#67daff' }}>
+            <div 
+              className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
+            >
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 💎
               </div>
@@ -903,7 +1136,10 @@ export default function App() {
               </ul>
             </div>
 
-            <div className="border-2 border-sky-400 p-6 rounded-3xl space-y-3 shadow-md" style={{ backgroundColor: '#67daff' }}>
+            <div 
+              className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
+            >
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 🛡️
               </div>
@@ -915,7 +1151,10 @@ export default function App() {
               </ul>
             </div>
 
-            <div className="border-2 border-sky-400 p-6 rounded-3xl space-y-3 shadow-md" style={{ backgroundColor: '#67daff' }}>
+            <div 
+              className="border-2 p-6 rounded-3xl space-y-3 shadow-md" 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder }}
+            >
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 ⏰
               </div>
@@ -1023,7 +1262,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium">
-        <p>© 2026 VALERIE GURL • Sunday City Private Waves Host</p>
+        <p>© 2026 VALERIE GURL • Sunday City Private Waves Host (Cloud Synced)</p>
       </footer>
     </div>
   );
