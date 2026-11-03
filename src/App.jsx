@@ -18,7 +18,10 @@ import {
   RotateCcw,
   History,
   Edit3,
-  Save
+  Save,
+  Globe,
+  FileText,
+  List
 } from 'lucide-react';
 
 export default function App() {
@@ -36,13 +39,57 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
-  
+
+  // --- 1. PERMANENT HOSTED PARTIES COUNT (Never resets automatically) ---
   const [hostedParties, setHostedParties] = useState(() => {
-    const saved = localStorage.getItem('valerie_hosted_parties');
-    return saved ? saved : '2,130+';
+    const saved = localStorage.getItem('valerie_hosted_parties_v2');
+    return saved !== null ? saved : '2,130+';
   });
   const [newHostedCount, setNewHostedCount] = useState(hostedParties);
   const [isEditingParties, setIsEditingParties] = useState(false);
+
+  // --- 2. PERMANENT DYNAMIC WEBSITE CONTENT (Never resets automatically) ---
+  const defaultSiteContent = {
+    hostBio: "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!",
+    wavesTimingText: "Waves 15:00–19:00 UTC",
+    maxPartiesSingleWave: "503",
+    rule1Title: "How Private Waves Work",
+    rule1Bullet1: "Send 200 gems per wave with a screenshot as proof.",
+    rule1Bullet2: "Drop your game name + tag in the registration form.",
+    rule1Bullet3: "VALERIE GURL approves in queue order — then you party!",
+    rule2Title: "Hustle-Free Guarantee",
+    rule2Bullet1: "Zero disconnects — waves restart instantly if anything drops.",
+    rule2Bullet2: "Friendly queue, no drama, no waiting-room chaos.",
+    rule3Title: "Live Host Schedule",
+    rule3NextWave: "Next wave starts at 15:00 UTC",
+    rule3Desc: "Party hours: 15:00 – 19:00 UTC, every single day. Booking stays open 24/7 — waves are served in queue order.",
+    discordBannerText: "VALERIE GURL replies in under 5 minutes. Approvals, wave updates, and custom requests — click below to open her profile directly.",
+    discordUrl: "https://discord.com/users/757598254668972065"
+  };
+
+  const [siteContent, setSiteContent] = useState(() => {
+    const saved = localStorage.getItem('valerie_site_content_v2');
+    if (saved) {
+      try {
+        return { ...defaultSiteContent, ...JSON.parse(saved) };
+      } catch (e) {
+        return defaultSiteContent;
+      }
+    }
+    return defaultSiteContent;
+  });
+
+  const [editContentForm, setEditContentForm] = useState(siteContent);
+  const [contentSaveSuccess, setContentSaveSuccess] = useState(false);
+
+  // Save changes permanently whenever state changes
+  useEffect(() => {
+    localStorage.setItem('valerie_hosted_parties_v2', hostedParties);
+  }, [hostedParties]);
+
+  useEffect(() => {
+    localStorage.setItem('valerie_site_content_v2', JSON.stringify(siteContent));
+  }, [siteContent]);
 
   const realValerieAvatar = "https://sunday-city-waves--00ko1l64.preview.static.emergentagent.com/valerie-avatar.jpeg";
 
@@ -83,7 +130,7 @@ export default function App() {
   ];
 
   const [submissions, setSubmissions] = useState(() => {
-    const saved = localStorage.getItem('valerie_submissions');
+    const saved = localStorage.getItem('valerie_submissions_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { return defaultSubmissions; }
     }
@@ -91,7 +138,7 @@ export default function App() {
   });
 
   const [deletedSubmissions, setDeletedSubmissions] = useState(() => {
-    const saved = localStorage.getItem('valerie_deleted_submissions');
+    const saved = localStorage.getItem('valerie_deleted_submissions_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { return []; }
     }
@@ -99,16 +146,12 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('valerie_submissions', JSON.stringify(submissions));
+    localStorage.setItem('valerie_submissions_v2', JSON.stringify(submissions));
   }, [submissions]);
 
   useEffect(() => {
-    localStorage.setItem('valerie_deleted_submissions', JSON.stringify(deletedSubmissions));
+    localStorage.setItem('valerie_deleted_submissions_v2', JSON.stringify(deletedSubmissions));
   }, [deletedSubmissions]);
-
-  useEffect(() => {
-    localStorage.setItem('valerie_hosted_parties', hostedParties);
-  }, [hostedParties]);
 
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
@@ -201,6 +244,13 @@ export default function App() {
     setIsEditingParties(false);
   };
 
+  const handleSaveDynamicContent = (e) => {
+    e.preventDefault();
+    setSiteContent(editContentForm);
+    setContentSaveSuccess(true);
+    setTimeout(() => setContentSaveSuccess(false), 3000);
+  };
+
   const CustomStyledName = ({ fontSize = "text-2xl sm:text-3xl" }) => (
     <div className={`font-black tracking-wide flex items-center gap-0.5 whitespace-nowrap ${fontSize}`}>
       <span className="text-pink-600">-</span>
@@ -223,7 +273,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-pink-200 selection:text-pink-900">
       
-      {/* 1. Header Navbar with VIBRANT SOLID #59ffe5 */}
+      {/* Header Navbar with SOLID #59ffe5 */}
       <header className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2 border-teal-300" style={{ backgroundColor: '#59ffe5' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -249,7 +299,7 @@ export default function App() {
             <a href="#booking" onClick={() => setActiveTab('booking')} className="hover:text-pink-700 transition-colors">Wave Booking</a>
             <a href="#rules" className="hover:text-pink-700 transition-colors">Party Rules</a>
             <a href="#stats" className="hover:text-pink-700 transition-colors">Host Stats</a>
-            <a href="https://discord.com/users/757598254668972065" target="_blank" rel="noreferrer" className="hover:text-pink-700 transition-colors flex items-center gap-1">
+            <a href={siteContent.discordUrl} target="_blank" rel="noreferrer" className="hover:text-pink-700 transition-colors flex items-center gap-1">
               Discord <ExternalLink className="w-3 h-3" />
             </a>
           </nav>
@@ -257,7 +307,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-900 text-xs font-bold shadow-sm border border-gray-200">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Waves 15:00–19:00 UTC
+              {siteContent.wavesTimingText}
             </div>
 
             {isLoggedIn ? (
@@ -283,14 +333,14 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {activeTab === 'dashboard' && isLoggedIn ? (
-          /* Admin Dashboard */
-          <section className="bg-pink-50 border-2 border-pink-200 rounded-3xl p-6 shadow-md space-y-6">
+          /* Admin Dashboard & Dynamic Content Manager */
+          <section className="bg-pink-50 border-2 border-pink-200 rounded-3xl p-6 shadow-md space-y-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-200">
               <div>
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                   <ShieldCheck className="text-pink-600" /> VALERIE GURL COMMAND CENTER
                 </h2>
-                <p className="text-xs text-gray-600 font-medium">Manage real-time party wave registrations & host settings.</p>
+                <p className="text-xs text-gray-600 font-bold">Manage real-time party wave registrations & edit website dynamic content.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -302,13 +352,49 @@ export default function App() {
               </div>
             </div>
 
-            {/* Host Stats Update Option */}
+            {/* Admin View Selection Tabs */}
+            <div className="flex items-center gap-4 border-b border-pink-200 pb-3 overflow-x-auto">
+              <button 
+                onClick={() => setAdminViewTab('active')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'active' 
+                    ? 'bg-pink-500 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <List className="w-3.5 h-3.5" /> Active Registrations ({submissions.length})
+              </button>
+
+              <button 
+                onClick={() => setAdminViewTab('content')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'content' 
+                    ? 'bg-purple-600 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" /> Dynamic Content & Text Manager
+              </button>
+
+              <button 
+                onClick={() => setAdminViewTab('deleted')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'deleted' 
+                    ? 'bg-rose-500 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" /> Deleted History ({deletedSubmissions.length})
+              </button>
+            </div>
+
+            {/* HOST STATS UPDATE (PERMANENT) */}
             <div className="bg-white border-2 border-pink-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-3">
                 <Trophy className="w-6 h-6 text-amber-500" />
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900">Total Hosted Parties Count</h4>
-                  <p className="text-xs text-gray-600">Currently showing: <span className="text-pink-600 font-black">{hostedParties}</span> on public site.</p>
+                  <h4 className="text-sm font-black text-gray-900">Total Hosted Parties Count (Permanent)</h4>
+                  <p className="text-xs text-gray-600">Currently live: <span className="text-pink-600 font-black">{hostedParties}</span> (saved permanently in storage).</p>
                 </div>
               </div>
 
@@ -319,18 +405,18 @@ export default function App() {
                     value={newHostedCount}
                     onChange={(e) => setNewHostedCount(e.target.value)}
                     placeholder="e.g. 2,150+"
-                    className="bg-gray-50 border border-pink-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-pink-500"
+                    className="bg-gray-50 border border-pink-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-pink-500"
                   />
                   <button 
                     type="submit"
-                    className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-black"
                   >
-                    <Save className="w-3.5 h-3.5" /> Save
+                    <Save className="w-3.5 h-3.5" /> Save Permanently
                   </button>
                   <button 
                     type="button"
                     onClick={() => setIsEditingParties(false)}
-                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-900"
+                    className="px-2 py-1.5 text-xs text-gray-600 hover:text-gray-900 font-bold"
                   >
                     Cancel
                   </button>
@@ -338,38 +424,15 @@ export default function App() {
               ) : (
                 <button 
                   onClick={() => { setNewHostedCount(hostedParties); setIsEditingParties(true); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-100 hover:bg-pink-200 border border-pink-300 text-pink-800 text-xs font-bold rounded-lg transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-100 hover:bg-pink-200 border border-pink-300 text-pink-800 text-xs font-black rounded-lg transition-all"
                 >
-                  <Edit3 className="w-3.5 h-3.5" /> Update Total Parties
+                  <Edit3 className="w-3.5 h-3.5" /> Edit Total Hosted Parties
                 </button>
               )}
             </div>
 
-            {/* Admin Tabs */}
-            <div className="flex items-center gap-4 border-b border-pink-200 pb-2">
-              <button 
-                onClick={() => setAdminViewTab('active')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  adminViewTab === 'active' 
-                    ? 'bg-pink-500 text-white shadow-sm' 
-                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
-                }`}
-              >
-                Active Registrations ({submissions.length})
-              </button>
-              <button 
-                onClick={() => setAdminViewTab('deleted')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  adminViewTab === 'deleted' 
-                    ? 'bg-rose-500 text-white shadow-sm' 
-                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
-                }`}
-              >
-                <History className="w-3.5 h-3.5" /> Deleted History ({deletedSubmissions.length})
-              </button>
-            </div>
-
-            {adminViewTab === 'active' ? (
+            {/* TAB 1: ACTIVE REGISTRATIONS */}
+            {adminViewTab === 'active' && (
               <div className="overflow-x-auto bg-white rounded-2xl border-2 border-pink-200 p-2 shadow-sm">
                 <table className="w-full text-left text-sm text-gray-700">
                   <thead className="bg-pink-100/80 text-xs uppercase text-pink-900 border-b border-pink-200">
@@ -445,8 +508,127 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-            ) : (
-              /* Deleted History Tab */
+            )}
+
+            {/* TAB 2: DYNAMIC CONTENT MANAGER */}
+            {adminViewTab === 'content' && (
+              <form onSubmit={handleSaveDynamicContent} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-6 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                      <FileText className="text-purple-600" /> Website Dynamic Content Editor
+                    </h3>
+                    <p className="text-xs text-gray-600 font-medium">Yahan se aap jo bhi write/update karoge vo permanent site par change ho jayega!</p>
+                  </div>
+
+                  {contentSaveSuccess && (
+                    <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-black rounded-lg animate-bounce">
+                      ✓ Changes Saved Permanently!
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-black text-gray-900 mb-1">Host Bio Quote</label>
+                    <textarea 
+                      rows={3}
+                      value={editContentForm.hostBio}
+                      onChange={(e) => setEditContentForm({...editContentForm, hostBio: e.target.value})}
+                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black text-gray-900 mb-1">Navbar Wave Timing Tag</label>
+                    <input 
+                      type="text"
+                      value={editContentForm.wavesTimingText}
+                      onChange={(e) => setEditContentForm({...editContentForm, wavesTimingText: e.target.value})}
+                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600 mb-3"
+                    />
+
+                    <label className="block text-xs font-black text-gray-900 mb-1">Parties in 1 Wave Stat</label>
+                    <input 
+                      type="text"
+                      value={editContentForm.maxPartiesSingleWave}
+                      onChange={(e) => setEditContentForm({...editContentForm, maxPartiesSingleWave: e.target.value})}
+                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Rules Section Customization */}
+                <div className="border-t border-gray-200 pt-4 space-y-4">
+                  <h4 className="text-xs font-black uppercase text-purple-700 tracking-wider">Party Rules Box 1 (How Waves Work)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input 
+                      type="text"
+                      placeholder="Rule 1 Bullet 1"
+                      value={editContentForm.rule1Bullet1}
+                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet1: e.target.value})}
+                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="Rule 1 Bullet 2"
+                      value={editContentForm.rule1Bullet2}
+                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet2: e.target.value})}
+                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="Rule 1 Bullet 3"
+                      value={editContentForm.rule1Bullet3}
+                      onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet3: e.target.value})}
+                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 space-y-4">
+                  <h4 className="text-xs font-black uppercase text-purple-700 tracking-wider">Party Rules Box 2 & Box 3</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input 
+                      type="text"
+                      placeholder="Rule 2 Bullet 1"
+                      value={editContentForm.rule2Bullet1}
+                      onChange={(e) => setEditContentForm({...editContentForm, rule2Bullet1: e.target.value})}
+                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="Rule 3 Schedule Badge"
+                      value={editContentForm.rule3NextWave}
+                      onChange={(e) => setEditContentForm({...editContentForm, rule3NextWave: e.target.value})}
+                      className="bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <label className="block text-xs font-black text-gray-900">Discord Banner Announcement Text</label>
+                  <textarea 
+                    rows={2}
+                    value={editContentForm.discordBannerText}
+                    onChange={(e) => setEditContentForm({...editContentForm, discordBannerText: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-xs text-gray-900 font-bold focus:outline-none focus:border-purple-600"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> Save Website Dynamic Content
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: DELETED HISTORY */}
+            {adminViewTab === 'deleted' && (
               <div className="overflow-x-auto bg-white rounded-2xl border-2 border-pink-200 p-2 shadow-sm">
                 <table className="w-full text-left text-sm text-gray-700">
                   <thead className="bg-rose-100 text-xs uppercase text-rose-800 border-b border-rose-200">
@@ -526,7 +708,7 @@ export default function App() {
                 </div>
 
                 <blockquote className="text-gray-800 text-sm leading-relaxed border-l-4 border-pink-500 pl-4 italic mb-8 bg-white/90 py-3.5 rounded-r-2xl shadow-sm font-medium">
-                  "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!"
+                  "{siteContent.hostBio}"
                 </blockquote>
 
                 <div className="grid grid-cols-3 gap-3 mb-8" id="stats">
@@ -538,7 +720,7 @@ export default function App() {
 
                   <div className="bg-white border border-pink-200 p-3 rounded-2xl text-center shadow-sm">
                     <Flame className="w-5 h-5 text-pink-500 mx-auto mb-1" />
-                    <div className="text-xl font-black text-gray-900">503</div>
+                    <div className="text-xl font-black text-gray-900">{siteContent.maxPartiesSingleWave}</div>
                     <div className="text-[10px] uppercase tracking-wider text-gray-600 font-bold">Parties in 1 Wave</div>
                   </div>
 
@@ -553,7 +735,7 @@ export default function App() {
               <div className="space-y-3 pt-4 border-t border-pink-200">
                 <div className="flex items-center gap-3">
                   <a 
-                    href="https://discord.com/users/757598254668972065" 
+                    href={siteContent.discordUrl} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 bg-gray-900 hover:bg-black text-white font-bold text-sm rounded-2xl transition-all shadow-md"
@@ -713,11 +895,11 @@ export default function App() {
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 💎
               </div>
-              <h4 className="font-black text-gray-900 text-base">How Private Waves Work</h4>
+              <h4 className="font-black text-gray-900 text-base">{siteContent.rule1Title}</h4>
               <ul className="text-xs text-gray-900 space-y-2 leading-relaxed font-bold">
-                <li>• Send 200 gems per wave with a screenshot as proof.</li>
-                <li>• Drop your game name + tag in the registration form.</li>
-                <li>• VALERIE GURL approves in queue order — then you party!</li>
+                <li>• {siteContent.rule1Bullet1}</li>
+                <li>• {siteContent.rule1Bullet2}</li>
+                <li>• {siteContent.rule1Bullet3}</li>
               </ul>
             </div>
 
@@ -725,11 +907,11 @@ export default function App() {
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 🛡️
               </div>
-              <h4 className="font-black text-gray-900 text-base">Hustle-Free Guarantee</h4>
+              <h4 className="font-black text-gray-900 text-base">{siteContent.rule2Title}</h4>
               <ul className="text-xs text-gray-900 space-y-2 leading-relaxed font-bold">
-                <li>• Zero disconnects — waves restart instantly if anything drops.</li>
-                <li>• Friendly queue, no drama, no waiting-room chaos.</li>
-                <li>• {hostedParties} waves hosted with a 503-party single-wave record.</li>
+                <li>• {siteContent.rule2Bullet1}</li>
+                <li>• {siteContent.rule2Bullet2}</li>
+                <li>• {hostedParties} waves hosted with a {siteContent.maxPartiesSingleWave}-party single-wave record.</li>
               </ul>
             </div>
 
@@ -737,10 +919,10 @@ export default function App() {
               <div className="w-10 h-10 rounded-2xl bg-white border-2 border-gray-900 flex items-center justify-center text-gray-900 font-bold shadow-sm">
                 ⏰
               </div>
-              <h4 className="font-black text-gray-900 text-base">Live Host Schedule</h4>
-              <p className="text-xs text-emerald-900 font-black">Next wave starts at 15:00 UTC</p>
+              <h4 className="font-black text-gray-900 text-base">{siteContent.rule3Title}</h4>
+              <p className="text-xs text-emerald-900 font-black">{siteContent.rule3NextWave}</p>
               <p className="text-xs text-gray-900 leading-relaxed font-bold">
-                Party hours: 15:00 – 19:00 UTC, every single day. Booking stays open 24/7 — waves are served in queue order.
+                {siteContent.rule3Desc}
               </p>
             </div>
           </div>
@@ -754,12 +936,12 @@ export default function App() {
             </span>
             <h3 className="text-2xl font-black text-gray-900">Join Discord / Contact Host</h3>
             <p className="text-xs text-gray-700 max-w-xl font-medium">
-              VALERIE GURL replies in under 5 minutes. Approvals, wave updates, and custom requests — click below to open her profile directly.
+              {siteContent.discordBannerText}
             </p>
           </div>
 
           <a 
-            href="https://discord.com/users/757598254668972065" 
+            href={siteContent.discordUrl} 
             target="_blank" 
             rel="noreferrer"
             className="px-6 py-3.5 bg-gray-900 hover:bg-black text-white font-black text-sm rounded-2xl transition-all shadow-md flex items-center gap-2 whitespace-nowrap"
