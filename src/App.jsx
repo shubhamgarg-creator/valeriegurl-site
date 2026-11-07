@@ -33,7 +33,8 @@ import {
   Zap,
   Smile,
   Sliders,
-  Box
+  Box,
+  Settings
 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION ---
@@ -76,6 +77,13 @@ export default function App() {
     // Top Header Navbar
     headerBg: '#59ffe5',
     headerText: '#111827',
+
+    // Host Login / View Website Dedicated Admin Button Controls
+    adminBtnBg: '#111827',
+    adminBtnText: '#ffffff',
+    adminBtnBorderColor: '#111827',
+    adminBtnBorderWidth: '2px',
+    adminBtnBorderRadius: '16px',
     
     // Profile Box & Stats Cards
     profileBoxBg: '#fff0f6',
@@ -85,12 +93,12 @@ export default function App() {
     subtagFontFamily: "'Inter', sans-serif",
     avatarRingColor: '#ec4899',
 
-    // Stats Cards Customization (IMG_0046 Fix)
+    // Stats Cards Customization
     statsBoxBg: '#ffffff',
     statsBoxBorderColor: '#fbcfe8',
     statsTextColor: '#111827',
 
-    // Registration Form Box & Input Fields Customization (IMG_0047 Fix)
+    // Registration Form Box & Input Fields Customization
     regBoxBg: '#ff91f0',
     regBoxBorder: '#f472b6',
     regBoxText: '#111827',
@@ -109,7 +117,7 @@ export default function App() {
     calcBoxBorderColor: '#f472b6',
     calcBoxText: '#111827',
 
-    // Party Rules Section & Emoji Boxes (IMG_0048 Fix)
+    // Party Rules Section & Emoji Boxes
     rulesTitleColor: '#111827',
     rulesCategoryColor: '#0284c7',
     rulesBoxBg: '#67daff',
@@ -132,11 +140,6 @@ export default function App() {
     btnBorderColor: '#111827',
     btnBorderStyle: 'solid',
     btnBorderRadius: '16px',
-
-    // Admin Login Button Specific Border
-    adminBtnBg: '#111827',
-    adminBtnText: '#ffffff',
-    adminBtnBorderColor: '#111827',
 
     // Multi-color Letter Colors for Name
     nameLetterColors: ['#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea']
@@ -382,7 +385,7 @@ export default function App() {
   const handleSaveTheme = (e) => {
     e.preventDefault();
     set(ref(db, 'valerie_site/theme'), editThemeForm);
-    showTempMsg("All box borders, input fields & colors synced to cloud!");
+    showTempMsg("All box borders, input fields & Host Login button options synced to cloud!");
   };
 
   const handleResetTheme = () => {
@@ -394,12 +397,6 @@ export default function App() {
   const showTempMsg = (msg) => {
     setSaveSuccessMsg(msg);
     setTimeout(() => setSaveSuccessMsg(''), 3500);
-  };
-
-  const handleLetterColorChange = (index, color) => {
-    const newColors = [...(editThemeForm.nameLetterColors || [])];
-    newColors[index] = color;
-    setEditThemeForm({ ...editThemeForm, nameLetterColors: newColors });
   };
 
   const RenderDynamicBrandName = ({ name, fontSize = "text-xl sm:text-2xl" }) => {
@@ -428,16 +425,17 @@ export default function App() {
     borderRadius: theme.btnBorderRadius || '16px'
   };
 
+  // DEDICATED HOST LOGIN / VIEW WEBSITE BUTTON STYLE
   const adminBtnBorderStyle = {
-    backgroundColor: theme.adminBtnBg || theme.primaryBtnBg,
-    color: theme.adminBtnText || theme.primaryBtnText,
-    borderWidth: theme.btnBorderWidth || '2px',
-    borderColor: theme.adminBtnBorderColor || theme.btnBorderColor || '#111827',
-    borderStyle: theme.btnBorderStyle || 'solid',
-    borderRadius: theme.btnBorderRadius || '16px'
+    backgroundColor: theme.adminBtnBg || '#111827',
+    color: theme.adminBtnText || '#ffffff',
+    borderColor: theme.adminBtnBorderColor || '#111827',
+    borderWidth: theme.adminBtnBorderWidth || '2px',
+    borderRadius: theme.adminBtnBorderRadius || '16px',
+    borderStyle: 'solid'
   };
 
-  // Dynamic Input Box Style for Registration Form (IMG_0047 Fix)
+  // Dynamic Input Box Style
   const inputStyle = {
     backgroundColor: theme.inputFieldBg || '#ffffff',
     color: theme.inputFieldText || '#111827',
@@ -447,7 +445,7 @@ export default function App() {
     borderStyle: 'solid'
   };
 
-  // Dynamic Upload Box Style (IMG_0047 Fix)
+  // Dynamic Upload Box Style
   const uploadBoxStyle = {
     backgroundColor: theme.uploadBoxBg || '#ffffff',
     borderColor: theme.uploadBoxBorderColor || '#f472b6',
@@ -456,7 +454,7 @@ export default function App() {
     borderRadius: theme.inputFieldBorderRadius || '16px'
   };
 
-  // Dynamic Calculation Total Box Style (IMG_0047 Fix)
+  // Dynamic Calculation Total Box Style
   const calcBoxStyle = {
     backgroundColor: theme.calcBoxBg || '#ffffff',
     borderColor: theme.calcBoxBorderColor || '#f472b6',
@@ -466,7 +464,7 @@ export default function App() {
     borderStyle: 'solid'
   };
 
-  // Dynamic Stats Cards Style (IMG_0046 Fix)
+  // Dynamic Stats Cards Style
   const statsBoxStyle = {
     backgroundColor: theme.statsBoxBg || '#ffffff',
     borderColor: theme.statsBoxBorderColor || '#fbcfe8',
@@ -476,7 +474,7 @@ export default function App() {
     borderRadius: '16px'
   };
 
-  // Dynamic Emoji Container Box Style (IMG_0048 Fix)
+  // Dynamic Emoji Container Box Style
   const emojiBoxStyle = {
     backgroundColor: theme.emojiBoxBg || '#ffffff',
     borderColor: theme.emojiBoxBorderColor || '#38bdf8',
@@ -590,7 +588,7 @@ export default function App() {
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                   <ShieldCheck className="text-pink-600" /> COMMAND CENTER (100% DYNAMIC CONTROL)
                 </h2>
-                <p className="text-xs text-gray-600 font-bold">Customize every sentence, font, emoji, border, and color across all boxes on the website.</p>
+                <p className="text-xs text-gray-600 font-bold">Customize Host Login button, View Website button, box borders, fonts, and colors across all sections.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -623,7 +621,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Palette className="w-3.5 h-3.5" /> Colors, Fonts & Box Borders (100% Custom)
+                <Palette className="w-3.5 h-3.5" /> Colors, Fonts, Host Login & Box Borders
               </button>
 
               <button 
@@ -692,7 +690,7 @@ export default function App() {
               )}
             </div>
 
-            {/* TAB 1: REGISTRATIONS WITH PERMANENT DELETE */}
+            {/* TAB 1: REGISTRATIONS */}
             {adminViewTab === 'active' && (
               <div className="overflow-x-auto bg-white rounded-2xl border-2 border-pink-200 p-2 shadow-sm">
                 <table className="w-full text-left text-sm text-gray-700">
@@ -778,15 +776,15 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: FULL THEME & INNER BOX BORDERS CUSTOMIZER (FIXES FOR ALL SCREENSHOTS) */}
+            {/* TAB 2: FULL THEME & DEDICATED HOST LOGIN / VIEW WEBSITE BUTTON CONTROLS */}
             {adminViewTab === 'theme' && (
               <form onSubmit={handleSaveTheme} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-8 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <Palette className="text-indigo-600" /> Complete Box Border & Color Customizer
+                      <Palette className="text-indigo-600" /> Complete Box Border & Button Customizer
                     </h3>
-                    <p className="text-xs text-gray-600 font-bold">Customize all inner input boxes, emoji boxes, stats cards, and borders in real-time.</p>
+                    <p className="text-xs text-gray-600 font-bold">Customize Host Login button, View Website button, inner input fields, emoji boxes, stats cards, and borders in real-time.</p>
                   </div>
                   <button 
                     type="button" 
@@ -797,10 +795,108 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* --- Section 1: Inner Input Fields & Registration Box (IMG_0047 FIX) --- */}
+                {/* --- SPECIAL DEDICATED SECTION: HOST LOGIN & VIEW WEBSITE BUTTON CONTROLS --- */}
+                <div className="bg-indigo-50/80 border-2 border-indigo-200 rounded-2xl p-5 space-y-4">
+                  <h4 className="text-sm font-black text-indigo-900 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-indigo-600" /> Host Login & View Website Button Customizer
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Button Background Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.adminBtnBg} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnBg: e.target.value})}
+                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnBg}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Button Text Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.adminBtnText} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnText: e.target.value})}
+                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnText}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Button Border Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.adminBtnBorderColor} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnBorderColor: e.target.value})}
+                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnBorderColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Button Border Thickness</label>
+                      <select 
+                        value={editThemeForm.adminBtnBorderWidth}
+                        onChange={(e) => setEditThemeForm({ ...editThemeForm, adminBtnBorderWidth: e.target.value })}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                      >
+                        <option value="1px">Thin (1px)</option>
+                        <option value="1.5px">Soft (1.5px)</option>
+                        <option value="2px">Standard (2px)</option>
+                        <option value="3px">Thick (3px)</option>
+                        <option value="4px">Extra Thick (4px)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Live Button Preview Box */}
+                  <div className="bg-white p-3 rounded-xl border border-indigo-200 flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-600">Live Header Button Preview:</span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        type="button"
+                        style={{
+                          backgroundColor: editThemeForm.adminBtnBg,
+                          color: editThemeForm.adminBtnText,
+                          borderColor: editThemeForm.adminBtnBorderColor,
+                          borderWidth: editThemeForm.adminBtnBorderWidth,
+                          borderRadius: editThemeForm.adminBtnBorderRadius || '16px',
+                          borderStyle: 'solid'
+                        }}
+                        className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold"
+                      >
+                        <LogIn className="w-3.5 h-3.5" /> Host Login
+                      </button>
+                      <button 
+                        type="button"
+                        style={{
+                          backgroundColor: editThemeForm.adminBtnBg,
+                          color: editThemeForm.adminBtnText,
+                          borderColor: editThemeForm.adminBtnBorderColor,
+                          borderWidth: editThemeForm.adminBtnBorderWidth,
+                          borderRadius: editThemeForm.adminBtnBorderRadius || '16px',
+                          borderStyle: 'solid'
+                        }}
+                        className="px-4 py-2 text-xs font-black"
+                      >
+                        View Website
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- Section 1: Inner Input Fields & Registration Box --- */}
                 <div className="bg-sky-50/70 border-2 border-sky-200 rounded-2xl p-5 space-y-4">
                   <h4 className="text-sm font-black text-sky-900 flex items-center gap-2">
-                    <Box className="w-4 h-4 text-sky-600" /> Registration Inner Input Fields & Borders (IMG_0047 Fix)
+                    <Box className="w-4 h-4 text-sky-600" /> Registration Inner Input Fields & Borders
                   </h4>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -900,10 +996,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* --- Section 2: Host Profile Stats Cards (IMG_0046 FIX) --- */}
+                {/* --- Section 2: Host Profile Stats Cards --- */}
                 <div className="bg-pink-50/70 border-2 border-pink-200 rounded-2xl p-5 space-y-4">
                   <h4 className="text-sm font-black text-pink-900 flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-pink-600" /> Host Stats 3 Inner Boxes (IMG_0046 Fix)
+                    <Trophy className="w-4 h-4 text-pink-600" /> Host Stats 3 Inner Boxes
                   </h4>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -948,10 +1044,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* --- Section 3: Party Rules Emoji Container Boxes (IMG_0048 FIX) --- */}
+                {/* --- Section 3: Party Rules Emoji Container Boxes --- */}
                 <div className="bg-emerald-50/70 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
                   <h4 className="text-sm font-black text-emerald-900 flex items-center gap-2">
-                    <Smile className="w-4 h-4 text-emerald-600" /> Party Rules Small Emoji Boxes (IMG_0048 Fix)
+                    <Smile className="w-4 h-4 text-emerald-600" /> Party Rules Small Emoji Boxes
                   </h4>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1097,7 +1193,7 @@ export default function App() {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <Save className="w-4 h-4" /> Save All Box Borders & Colors to Cloud
+                    <Save className="w-4 h-4" /> Save All Options to Cloud
                   </button>
                 </div>
               </form>
@@ -1433,7 +1529,7 @@ export default function App() {
                   "{siteContent.hostBio}"
                 </blockquote>
 
-                {/* IMG_0046 FIX: Dynamic Host Stats Boxes without harsh black borders */}
+                {/* Host Stats Cards */}
                 <div className="grid grid-cols-3 gap-3 mb-8" id="stats">
                   <div className="p-3 text-center shadow-sm" style={statsBoxStyle}>
                     <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
@@ -1475,7 +1571,7 @@ export default function App() {
 
             </div>
 
-            {/* Right Card: Private Wave Registration Form (IMG_0047 FIX - Fully Dynamic Input Borders & Colors) */}
+            {/* Right Card: Private Wave Registration Form */}
             <div 
               className="lg:col-span-7 border-2 rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col justify-between transition-colors" 
               style={{ backgroundColor: theme.regBoxBg, borderColor: theme.regBoxBorder, color: theme.regBoxText }}
@@ -1625,7 +1721,7 @@ export default function App() {
           </section>
         )}
 
-        {/* Section 2: Party Rules (IMG_0048 FIX - Emoji Container Boxes & Styling Fixed) */}
+        {/* Section 2: Party Rules */}
         <section id="rules" className="space-y-4">
           <div>
             <p 
