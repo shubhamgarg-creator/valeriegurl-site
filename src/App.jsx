@@ -28,13 +28,9 @@ import {
   RefreshCw,
   Wifi,
   AlertCircle,
-  Crown,
-  Star,
-  Zap,
-  Smile,
   Sliders,
-  Box,
-  Settings
+  Snowflake,
+  Zap
 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION ---
@@ -51,6 +47,79 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// --- SNOWFALL & SPARKLE ANIMATION OVERLAY COMPONENT ---
+const SnowfallAndBlinkOverlay = ({ config }) => {
+  const { 
+    enableSnowfall = true, 
+    enableBlink = true, 
+    snowCount = 35, 
+    blinkCount = 25, 
+    snowColor = '#ffffff', 
+    blinkColor = '#ffc0cb',
+    snowSpeed = 'normal' // slow, normal, fast
+  } = config || {};
+
+  if (!enableSnowfall && !enableBlink) return null;
+
+  const durationMultiplier = snowSpeed === 'slow' ? 1.8 : snowSpeed === 'fast' ? 0.6 : 1.0;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+      {/* Snowfall Flakes */}
+      {enableSnowfall && Array.from({ length: snowCount }).map((_, i) => {
+        const left = (i * 2.85 + (i * 7) % 17) % 100;
+        const size = 3 + (i % 5) * 3;
+        const duration = (5 + (i % 7) * 2) * durationMultiplier;
+        const delay = (i % 5) * 1.2;
+        const opacity = 0.4 + (i % 5) * 0.12;
+
+        return (
+          <div
+            key={`snow-${i}`}
+            className="absolute rounded-full animate-snowfall"
+            style={{
+              left: `${left}%`,
+              width: `${size}px`,
+              height: `${size}px`,
+              backgroundColor: snowColor,
+              opacity: opacity,
+              boxShadow: `0 0 6px ${snowColor}`,
+              animationDuration: `${duration}s`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        );
+      })}
+
+      {/* Blink / Sparkle Stars */}
+      {enableBlink && Array.from({ length: blinkCount }).map((_, i) => {
+        const top = (i * 4.3 + (i * 11) % 23) % 100;
+        const left = (i * 3.7 + (i * 13) % 19) % 100;
+        const size = 4 + (i % 4) * 4;
+        const duration = 1.2 + (i % 5) * 0.8;
+        const delay = (i % 7) * 0.4;
+
+        return (
+          <div
+            key={`blink-${i}`}
+            className="absolute rounded-full animate-twinkle"
+            style={{
+              top: `${top}%`,
+              left: `${left}%`,
+              width: `${size}px`,
+              height: `${size}px`,
+              backgroundColor: blinkColor,
+              boxShadow: `0 0 10px ${blinkColor}, 0 0 18px ${blinkColor}`,
+              animationDuration: `${duration}s`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 export default function App() {
   const [gameName, setGameName] = useState('');
@@ -69,40 +138,69 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
 
-  // --- DEFAULT DYNAMIC THEME ---
+  // --- DEFAULT ANIMATION CONFIG ---
+  const defaultAnimationConfig = {
+    enableSnowfall: true,
+    enableBlink: true,
+    snowCount: 35,
+    blinkCount: 25,
+    snowColor: '#ffffff',
+    blinkColor: '#ffc0cb',
+    snowSpeed: 'normal'
+  };
+
+  // --- DEFAULT GRANULAR FONT SIZES & FULL DYNAMIC THEME ---
   const defaultTheme = {
     fontFamily: "'Inter', sans-serif",
     pageBg: '#ffffff',
     
-    // Top Header Navbar
+    // Top Navbar Font Sizes & Colors
     headerBg: '#59ffe5',
     headerText: '#111827',
-
-    // Host Login / View Website Dedicated Admin Button Controls
+    headerAlignment: 'left',
+    navLinksFontSize: '14px',
+    timingBadgeFontSize: '12px',
+    adminBtnFontSize: '12px',
     adminBtnBg: '#111827',
     adminBtnText: '#ffffff',
     adminBtnBorderColor: '#111827',
     adminBtnBorderWidth: '2px',
     adminBtnBorderRadius: '16px',
-    
-    // Profile Box & Stats Cards
+
+    // Host Profile Left Card Font Sizes
     profileBoxBg: '#fff0f6',
     profileBoxBorder: '#fbcfe8',
     profileBoxText: '#111827',
+    profileTitleFontSize: '24px',
+    verifiedBadgeFontSize: '10px',
     subtagTextColor: '#be185d',
     subtagFontFamily: "'Inter', sans-serif",
+    subtagFontSize: '12px',
+    bioFontSize: '14px',
     avatarRingColor: '#ec4899',
+    profileAlignment: 'left',
 
-    // Stats Cards Customization
+    // Stats Cards Font Sizes
     statsBoxBg: '#ffffff',
     statsBoxBorderColor: '#fbcfe8',
     statsTextColor: '#111827',
+    statsNumberFontSize: '18px',
+    statsLabelFontSize: '10px',
 
-    // Registration Form Box & Input Fields Customization
+    // Profile Card Buttons & Footer Text
+    chatBtnFontSize: '14px',
+    gemsBadgeFontSize: '12px',
+    profileFooterFontSize: '11px',
+
+    // Registration Form Right Card Font Sizes
     regBoxBg: '#ff91f0',
     regBoxBorder: '#f472b6',
     regBoxText: '#111827',
-    
+    regBoxAlignment: 'left',
+    regTitleFontSize: '24px',
+    regSubtextFontSize: '12px',
+    formLabelFontSize: '12px',
+    inputFieldFontSize: '14px',
     inputFieldBg: '#ffffff',
     inputFieldText: '#111827',
     inputFieldBorderColor: '#f472b6',
@@ -112,26 +210,45 @@ export default function App() {
     uploadBoxBg: '#ffffff',
     uploadBoxBorderColor: '#f472b6',
     uploadBoxBorderStyle: 'dashed',
+    uploadTextFontSize: '12px',
+    uploadSubtextFontSize: '10px',
 
     calcBoxBg: '#ffffff',
     calcBoxBorderColor: '#f472b6',
     calcBoxText: '#111827',
+    calcTextFontSize: '14px',
+    calcGemsFontSize: '20px',
 
-    // Party Rules Section & Emoji Boxes
-    rulesTitleColor: '#111827',
+    submitBtnFontSize: '16px',
+    formFooterFontSize: '11px',
+
+    // Party Rules Section Font Sizes & Colors
     rulesCategoryColor: '#0284c7',
+    rulesCategoryFontSize: '12px',
+    rulesTitleColor: '#111827',
+    rulesTitleFontSize: '24px',
+
     rulesBoxBg: '#67daff',
     rulesBoxBorder: '#38bdf8',
     rulesBoxText: '#111827',
+    rulesBoxAlignment: 'left',
 
+    rulesBoxTitleFontSize: '16px',
+    rulesBoxBodyFontSize: '12px',
     emojiBoxBg: '#ffffff',
     emojiBoxBorderColor: '#38bdf8',
     emojiBoxBorderWidth: '1.5px',
+    emojiFontSize: '20px',
 
-    // Bottom Discord Banner
+    // Bottom Discord Banner Font Sizes & Colors
     bannerBg: '#fce7f3',
     bannerBorder: '#fbcfe8',
     bannerTextColor: '#111827',
+    bannerAlignment: 'left',
+    bannerBadgeFontSize: '10px',
+    bannerTitleFontSize: '24px',
+    bannerTextFontSize: '12px',
+    bannerBtnFontSize: '14px',
 
     // Primary Buttons (General)
     primaryBtnBg: '#111827',
@@ -145,63 +262,61 @@ export default function App() {
     nameLetterColors: ['#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea', '#2563eb', '#db2777', '#9333ea']
   };
 
-  // --- DEFAULT DYNAMIC CONTENT & TEXT ---
+  // --- DEFAULT DYNAMIC CONTENT ---
   const defaultSiteContent = {
     brandName: "-VALERIE GURL-",
     selectedSymbol: "👑",
     verifiedBadgeText: "Verified OG",
     hostSubtag: "133LNO • The OG Party Host • Sunday City",
-    hostBio: "Party Host for Sunday City. Need 200 gems to organize private parties. Fast, reliable, and hustle-free!",
+    hostBio: "Dedicated and 100% trusted host committed to a NoScams guarantee. With 90%–100% verified, trustworthy participants in every wave, I ensure a safe and scam-free experience",
     wavesTimingText: "Waves 15:00–19:00 UTC",
     maxPartiesSingleWave: "503",
 
-    // Registration Form Headings & Text
     regTitle: "Register for a Private Wave",
     regSubtext: "All form fields including screenshot proof are strictly mandatory.",
     formFooterNote: "No login required — Host confirms on Discord directly.",
 
-    // Rules Section Text & Emojis
     rulesCategoryHeading: "HOW IT WORKS",
     rulesMainHeading: "Party Rules, Made Simple",
     
     rule1Emoji: "💎",
-    rule1Title: "How Private Waves Work",
-    rule1Bullet1: "Send 200 gems per wave with a screenshot as proof.",
-    rule1Bullet2: "Drop your game name + tag in the registration form.",
-    rule1Bullet3: "Host approves in queue order — then you party!",
+    rule1Title: "How to book Wave?",
+    rule1Bullet1: "Send 200 gems with a screenshot as proof.",
+    rule1Bullet2: "Drop your game name + tag",
+    rule1Bullet3: "Host approves in queue order — then wait",
 
-    rule2Emoji: "🛡️",
+    rule2Emoji: "🍒",
     rule2Title: "Hustle-Free Guarantee",
-    rule2Bullet1: "Zero disconnects — waves restart instantly if anything drops.",
-    rule2Bullet2: "Friendly queue, no drama, no waiting-room chaos.",
-    rule2Bullet3: "waves hosted with a 503-party single-wave record.",
+    rule2Bullet1: "Fast-Paced",
+    rule2Bullet2: "Friendly queue, no drama",
+    rule2Bullet3: "Waves Hosted so far",
 
-    rule3Emoji: "⏰",
-    rule3Title: "Live Host Schedule",
-    rule3NextWave: "Next wave starts at 15:00 UTC",
-    rule3Desc: "Party hours: 15:00 – 19:00 UTC, every single day. Booking stays open 24/7 — waves are served in queue order.",
+    rule3Emoji: "🌷",
+    rule3Title: "Host Schedule",
+    rule3NextWave: "Party hours: 15:00 – 19:00 UTC, every single day.",
+    rule3Desc: "Booking stays open 24/7 — waves are served in queue order.",
 
-    // Bottom Banner Text
     bannerBadgeText: "Fastest response",
     bannerTitle: "Join Discord / Contact Host",
     bannerText: "Host replies in under 5 minutes. Approvals, wave updates, and custom requests — click below to open profile directly.",
     discordUrl: "https://discord.com/users/757598254668972065"
   };
 
-  const defaultSubmissions = [];
-
   // --- STATES WITH CLOUD SYNC ---
   const [theme, setTheme] = useState(defaultTheme);
   const [editThemeForm, setEditThemeForm] = useState(defaultTheme);
 
-  const [hostedParties, setHostedParties] = useState('2,130+');
-  const [newHostedCount, setNewHostedCount] = useState('2,130+');
+  const [animConfig, setAnimConfig] = useState(defaultAnimationConfig);
+  const [editAnimForm, setEditAnimForm] = useState(defaultAnimationConfig);
+
+  const [hostedParties, setHostedParties] = useState('2,375');
+  const [newHostedCount, setNewHostedCount] = useState('2,375');
   const [isEditingParties, setIsEditingParties] = useState(false);
 
   const [siteContent, setSiteContent] = useState(defaultSiteContent);
   const [editContentForm, setEditContentForm] = useState(defaultSiteContent);
 
-  const [submissions, setSubmissions] = useState(defaultSubmissions);
+  const [submissions, setSubmissions] = useState([]);
   const [deletedSubmissions, setDeletedSubmissions] = useState([]);
 
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
@@ -215,6 +330,15 @@ export default function App() {
       if (data) {
         setTheme({ ...defaultTheme, ...data });
         setEditThemeForm({ ...defaultTheme, ...data });
+      }
+    });
+
+    const animRef = ref(db, 'valerie_site/animConfig');
+    onValue(animRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setAnimConfig({ ...defaultAnimationConfig, ...data });
+        setEditAnimForm({ ...defaultAnimationConfig, ...data });
       }
     });
 
@@ -239,21 +363,15 @@ export default function App() {
     const subRef = ref(db, 'valerie_site/submissions');
     onValue(subRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        setSubmissions(data);
-      } else {
-        setSubmissions([]);
-      }
+      if (data) setSubmissions(data);
+      else setSubmissions([]);
     });
 
     const delRef = ref(db, 'valerie_site/deletedSubmissions');
     onValue(delRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        setDeletedSubmissions(data);
-      } else {
-        setDeletedSubmissions([]);
-      }
+      if (data) setDeletedSubmissions(data);
+      else setDeletedSubmissions([]);
     });
   }, []);
 
@@ -262,8 +380,7 @@ export default function App() {
 
   const getCurrentUTCTime = () => {
     const now = new Date();
-    const isoString = now.toISOString();
-    return isoString.replace('T', ' ').substring(0, 16) + ' UTC';
+    return now.toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
   };
 
   const handleFileUpload = (e) => {
@@ -385,7 +502,13 @@ export default function App() {
   const handleSaveTheme = (e) => {
     e.preventDefault();
     set(ref(db, 'valerie_site/theme'), editThemeForm);
-    showTempMsg("All box borders, input fields & Host Login button options synced to cloud!");
+    showTempMsg("All granular font sizes, colors, alignments & borders synced to cloud!");
+  };
+
+  const handleSaveAnimConfig = (e) => {
+    e.preventDefault();
+    set(ref(db, 'valerie_site/animConfig'), editAnimForm);
+    showTempMsg("Snowfall & Blink animations synced to cloud!");
   };
 
   const handleResetTheme = () => {
@@ -399,11 +522,11 @@ export default function App() {
     setTimeout(() => setSaveSuccessMsg(''), 3500);
   };
 
-  const RenderDynamicBrandName = ({ name, fontSize = "text-xl sm:text-2xl" }) => {
+  const RenderDynamicBrandName = ({ name, customSize }) => {
     const colors = theme.nameLetterColors || defaultTheme.nameLetterColors;
     const letters = name.split('');
     return (
-      <span className={`font-black tracking-wide inline-flex items-center ${fontSize}`}>
+      <span className="font-black tracking-wide inline-flex items-center" style={{ fontSize: customSize || theme.profileTitleFontSize || '24px' }}>
         {letters.map((char, index) => {
           const color = colors[index % colors.length] || '#db2777';
           return (
@@ -425,27 +548,26 @@ export default function App() {
     borderRadius: theme.btnBorderRadius || '16px'
   };
 
-  // DEDICATED HOST LOGIN / VIEW WEBSITE BUTTON STYLE
   const adminBtnBorderStyle = {
     backgroundColor: theme.adminBtnBg || '#111827',
     color: theme.adminBtnText || '#ffffff',
     borderColor: theme.adminBtnBorderColor || '#111827',
     borderWidth: theme.adminBtnBorderWidth || '2px',
     borderRadius: theme.adminBtnBorderRadius || '16px',
-    borderStyle: 'solid'
+    borderStyle: 'solid',
+    fontSize: theme.adminBtnFontSize || '12px'
   };
 
-  // Dynamic Input Box Style
   const inputStyle = {
     backgroundColor: theme.inputFieldBg || '#ffffff',
     color: theme.inputFieldText || '#111827',
     borderColor: theme.inputFieldBorderColor || '#f472b6',
     borderWidth: theme.inputFieldBorderWidth || '1.5px',
     borderRadius: theme.inputFieldBorderRadius || '16px',
-    borderStyle: 'solid'
+    borderStyle: 'solid',
+    fontSize: theme.inputFieldFontSize || '14px'
   };
 
-  // Dynamic Upload Box Style
   const uploadBoxStyle = {
     backgroundColor: theme.uploadBoxBg || '#ffffff',
     borderColor: theme.uploadBoxBorderColor || '#f472b6',
@@ -454,7 +576,6 @@ export default function App() {
     borderRadius: theme.inputFieldBorderRadius || '16px'
   };
 
-  // Dynamic Calculation Total Box Style
   const calcBoxStyle = {
     backgroundColor: theme.calcBoxBg || '#ffffff',
     borderColor: theme.calcBoxBorderColor || '#f472b6',
@@ -464,7 +585,6 @@ export default function App() {
     borderStyle: 'solid'
   };
 
-  // Dynamic Stats Cards Style
   const statsBoxStyle = {
     backgroundColor: theme.statsBoxBg || '#ffffff',
     borderColor: theme.statsBoxBorderColor || '#fbcfe8',
@@ -474,7 +594,6 @@ export default function App() {
     borderRadius: '16px'
   };
 
-  // Dynamic Emoji Container Box Style
   const emojiBoxStyle = {
     backgroundColor: theme.emojiBoxBg || '#ffffff',
     borderColor: theme.emojiBoxBorderColor || '#38bdf8',
@@ -498,19 +617,28 @@ export default function App() {
     { name: "Native System UI", value: "system-ui, -apple-system, sans-serif" }
   ];
 
+  const getAlignmentClass = (align) => {
+    if (align === 'center') return 'text-center items-center justify-center';
+    if (align === 'right') return 'text-right items-end justify-end';
+    return 'text-left items-start justify-start';
+  };
+
   return (
     <div 
-      className="min-h-screen text-gray-900 selection:bg-pink-200 selection:text-pink-900 transition-colors duration-200"
-      style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}
+      className="min-h-screen selection:bg-pink-200 selection:text-pink-900 transition-colors duration-200 relative overflow-x-hidden"
+      style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily, color: theme.rulesBoxText || '#111827' }}
     >
       
+      {/* Dynamic Background Animation Overlay */}
+      <SnowfallAndBlinkOverlay config={animConfig} />
+
       {/* 1. Top Header Navbar */}
       <header 
         className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2" 
         style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: 'rgba(0,0,0,0.15)' }}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className={`max-w-7xl mx-auto flex items-center justify-between ${theme.headerAlignment === 'center' ? 'flex-col sm:flex-row' : ''}`}>
+          <div className={`flex items-center gap-3 ${getAlignmentClass(theme.headerAlignment)}`}>
             <div className="relative w-10 h-10 flex-shrink-0">
               <img 
                 src={realValerieAvatar} 
@@ -526,8 +654,8 @@ export default function App() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base sm:text-lg">{siteContent.selectedSymbol}</span>
-                <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-base sm:text-lg" />
+                <span style={{ fontSize: theme.profileTitleFontSize || '20px' }}>{siteContent.selectedSymbol}</span>
+                <RenderDynamicBrandName name={siteContent.brandName} customSize={theme.profileTitleFontSize || '20px'} />
               </div>
               <p className="text-xs font-mono font-bold flex items-center gap-1" style={{ color: theme.headerText }}>
                 <Wifi className="w-3 h-3 text-emerald-600 animate-pulse" /> LIVE CLOUD SYNC
@@ -535,7 +663,7 @@ export default function App() {
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-bold" style={{ color: theme.headerText }}>
+          <nav className="hidden md:flex items-center gap-8 font-bold" style={{ color: theme.headerText, fontSize: theme.navLinksFontSize || '14px' }}>
             <a href="#booking" onClick={() => setActiveTab('booking')} className="hover:opacity-80 transition-opacity">Wave Booking</a>
             <a href="#rules" className="hover:opacity-80 transition-opacity">Party Rules</a>
             <a href="#stats" className="hover:opacity-80 transition-opacity">Host Stats</a>
@@ -545,7 +673,10 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-900 text-xs font-bold shadow-sm border border-gray-200">
+            <div 
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-900 font-bold shadow-sm border border-gray-200"
+              style={{ fontSize: theme.timingBadgeFontSize || '12px' }}
+            >
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
               {siteContent.wavesTimingText}
             </div>
@@ -554,7 +685,7 @@ export default function App() {
               <button 
                 onClick={() => setActiveTab(activeTab === 'dashboard' ? 'booking' : 'dashboard')}
                 style={adminBtnBorderStyle}
-                className="px-4 py-2 text-xs font-black transition-all shadow-sm hover:opacity-90"
+                className="px-4 py-2 font-black transition-all shadow-sm hover:opacity-90"
               >
                 {activeTab === 'dashboard' ? 'View Website' : 'Admin Dashboard'}
               </button>
@@ -562,7 +693,7 @@ export default function App() {
               <button 
                 onClick={() => setShowLoginModal(true)}
                 style={adminBtnBorderStyle}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all shadow-sm hover:opacity-90"
+                className="flex items-center gap-1.5 px-3.5 py-2 font-bold transition-all shadow-sm hover:opacity-90"
               >
                 <LogIn className="w-3.5 h-3.5" /> Host Login
               </button>
@@ -572,7 +703,7 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12 relative z-10">
         
         {saveSuccessMsg && (
           <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white font-black px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
@@ -586,9 +717,9 @@ export default function App() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-200">
               <div>
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                  <ShieldCheck className="text-pink-600" /> COMMAND CENTER (100% DYNAMIC CONTROL)
+                  <ShieldCheck className="text-pink-600" /> COMMAND CENTER (WITH SNOWFALL & BLINK CUSTOMIZER)
                 </h2>
-                <p className="text-xs text-gray-600 font-bold">Customize Host Login button, View Website button, box borders, fonts, and colors across all sections.</p>
+                <p className="text-xs text-gray-600 font-bold">Manage registrations, font sizes, colors, sentences, and background animations.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -614,6 +745,17 @@ export default function App() {
               </button>
 
               <button 
+                onClick={() => setAdminViewTab('effects')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'effects' 
+                    ? 'bg-cyan-600 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <Snowflake className="w-3.5 h-3.5 animate-spin" /> Snowfall & Blink Effects
+              </button>
+
+              <button 
                 onClick={() => setAdminViewTab('theme')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                   adminViewTab === 'theme' 
@@ -621,7 +763,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Palette className="w-3.5 h-3.5" /> Colors, Fonts, Host Login & Box Borders
+                <Palette className="w-3.5 h-3.5" /> Font Sizes (Every Single Element)
               </button>
 
               <button 
@@ -632,7 +774,7 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" /> All Sentences, Emojis & Text Controls
+                <Globe className="w-3.5 h-3.5" /> All Sentences & Emojis
               </button>
 
               <button 
@@ -646,6 +788,132 @@ export default function App() {
                 <History className="w-3.5 h-3.5" /> Deleted History ({deletedSubmissions.length})
               </button>
             </div>
+
+            {/* TAB: SNOWFALL & BLINK EFFECTS CUSTOMIZER */}
+            {adminViewTab === 'effects' && (
+              <form onSubmit={handleSaveAnimConfig} className="bg-white border-2 border-cyan-200 rounded-2xl p-6 space-y-8 shadow-sm">
+                <div className="pb-3 border-b border-cyan-200">
+                  <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                    <Snowflake className="text-cyan-600" /> Snowfall & Blink Animation Controls
+                  </h3>
+                  <p className="text-xs text-gray-600 font-bold">Enable/disable background snowfall & twinkling stars, change particle counts, speeds and colors.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Snowfall Controls */}
+                  <div className="bg-cyan-50/70 p-5 rounded-2xl border-2 border-cyan-200 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-black text-cyan-900 flex items-center gap-2">
+                        <Snowflake className="w-4 h-4 text-cyan-600" /> 1. Snowfall Effect
+                      </h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={editAnimForm.enableSnowfall} 
+                          onChange={(e) => setEditAnimForm({...editAnimForm, enableSnowfall: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">SnowFlakes Density / Count ({editAnimForm.snowCount})</label>
+                        <input 
+                          type="range" 
+                          min={10} 
+                          max={100} 
+                          value={editAnimForm.snowCount} 
+                          onChange={(e) => setEditAnimForm({...editAnimForm, snowCount: parseInt(e.target.value)})}
+                          className="w-full accent-cyan-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snowfall Speed</label>
+                        <select 
+                          value={editAnimForm.snowSpeed}
+                          onChange={(e) => setEditAnimForm({...editAnimForm, snowSpeed: e.target.value})}
+                          className="w-full bg-white border border-cyan-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        >
+                          <option value="slow">Slow & Gentle</option>
+                          <option value="normal">Normal</option>
+                          <option value="fast">Fast Fall</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snow Color</label>
+                        <div className="flex items-center gap-2 bg-white p-2 border border-cyan-300 rounded-xl">
+                          <input 
+                            type="color" 
+                            value={editAnimForm.snowColor}
+                            onChange={(e) => setEditAnimForm({...editAnimForm, snowColor: e.target.value})}
+                            className="w-7 h-7 rounded border cursor-pointer"
+                          />
+                          <span className="text-xs font-mono font-bold text-gray-900">{editAnimForm.snowColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Blink / Sparkle Controls */}
+                  <div className="bg-pink-50/70 p-5 rounded-2xl border-2 border-pink-200 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-black text-pink-900 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-pink-600" /> 2. Blink / Twinkle Sparkles Effect
+                      </h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={editAnimForm.enableBlink} 
+                          onChange={(e) => setEditAnimForm({...editAnimForm, enableBlink: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Blink Sparkles Density / Count ({editAnimForm.blinkCount})</label>
+                        <input 
+                          type="range" 
+                          min={5} 
+                          max={70} 
+                          value={editAnimForm.blinkCount} 
+                          onChange={(e) => setEditAnimForm({...editAnimForm, blinkCount: parseInt(e.target.value)})}
+                          className="w-full accent-pink-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Blink Glow Color</label>
+                        <div className="flex items-center gap-2 bg-white p-2 border border-pink-300 rounded-xl">
+                          <input 
+                            type="color" 
+                            value={editAnimForm.blinkColor}
+                            onChange={(e) => setEditAnimForm({...editAnimForm, blinkColor: e.target.value})}
+                            className="w-7 h-7 rounded border cursor-pointer"
+                          />
+                          <span className="text-xs font-mono font-bold text-gray-900">{editAnimForm.blinkColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> Save Animation Settings to Cloud
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* HOST STATS UPDATE */}
             <div className="bg-white border-2 border-pink-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
@@ -663,7 +931,7 @@ export default function App() {
                     type="text" 
                     value={newHostedCount}
                     onChange={(e) => setNewHostedCount(e.target.value)}
-                    placeholder="e.g. 2,150+"
+                    placeholder="e.g. 2,375"
                     className="bg-gray-50 border border-pink-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 font-bold focus:outline-none focus:border-pink-500"
                   />
                   <button 
@@ -776,15 +1044,15 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: FULL THEME & DEDICATED HOST LOGIN / VIEW WEBSITE BUTTON CONTROLS */}
+            {/* TAB 2: GRANULAR FONT SIZE CONTROLS FOR EVERY SINGLE ELEMENT */}
             {adminViewTab === 'theme' && (
               <form onSubmit={handleSaveTheme} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-8 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <Palette className="text-indigo-600" /> Complete Box Border & Button Customizer
+                      <Type className="text-indigo-600" /> Granular Font Size Control (Every Single Text Element)
                     </h3>
-                    <p className="text-xs text-gray-600 font-bold">Customize Host Login button, View Website button, inner input fields, emoji boxes, stats cards, and borders in real-time.</p>
+                    <p className="text-xs text-gray-600 font-bold">Type or select exact font size for every single heading, label, paragraph, badge and button.</p>
                   </div>
                   <button 
                     type="button" 
@@ -795,397 +1063,429 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* --- SPECIAL DEDICATED SECTION: HOST LOGIN & VIEW WEBSITE BUTTON CONTROLS --- */}
+                {/* 1. Header Navbar Elements */}
                 <div className="bg-indigo-50/80 border-2 border-indigo-200 rounded-2xl p-5 space-y-4">
                   <h4 className="text-sm font-black text-indigo-900 flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-indigo-600" /> Host Login & View Website Button Customizer
+                    <Sliders className="w-4 h-4 text-indigo-600" /> 1. Top Navbar Font Sizes
                   </h4>
-                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Button Background Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.adminBtnBg} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnBg: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnBg}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Button Text Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.adminBtnText} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnText: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnText}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Button Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-indigo-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.adminBtnBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.adminBtnBorderColor}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Button Border Thickness</label>
-                      <select 
-                        value={editThemeForm.adminBtnBorderWidth}
-                        onChange={(e) => setEditThemeForm({ ...editThemeForm, adminBtnBorderWidth: e.target.value })}
+                      <label className="block text-xs font-black text-gray-800 mb-1">Brand Name / Title Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.profileTitleFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, profileTitleFontSize: e.target.value})}
                         className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                      >
-                        <option value="1px">Thin (1px)</option>
-                        <option value="1.5px">Soft (1.5px)</option>
-                        <option value="2px">Standard (2px)</option>
-                        <option value="3px">Thick (3px)</option>
-                        <option value="4px">Extra Thick (4px)</option>
-                      </select>
+                        placeholder="e.g. 24px"
+                      />
                     </div>
-                  </div>
-
-                  {/* Live Button Preview Box */}
-                  <div className="bg-white p-3 rounded-xl border border-indigo-200 flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-600">Live Header Button Preview:</span>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        type="button"
-                        style={{
-                          backgroundColor: editThemeForm.adminBtnBg,
-                          color: editThemeForm.adminBtnText,
-                          borderColor: editThemeForm.adminBtnBorderColor,
-                          borderWidth: editThemeForm.adminBtnBorderWidth,
-                          borderRadius: editThemeForm.adminBtnBorderRadius || '16px',
-                          borderStyle: 'solid'
-                        }}
-                        className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold"
-                      >
-                        <LogIn className="w-3.5 h-3.5" /> Host Login
-                      </button>
-                      <button 
-                        type="button"
-                        style={{
-                          backgroundColor: editThemeForm.adminBtnBg,
-                          color: editThemeForm.adminBtnText,
-                          borderColor: editThemeForm.adminBtnBorderColor,
-                          borderWidth: editThemeForm.adminBtnBorderWidth,
-                          borderRadius: editThemeForm.adminBtnBorderRadius || '16px',
-                          borderStyle: 'solid'
-                        }}
-                        className="px-4 py-2 text-xs font-black"
-                      >
-                        View Website
-                      </button>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Nav Links Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.navLinksFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, navLinksFontSize: e.target.value})}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Timing Badge Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.timingBadgeFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, timingBadgeFontSize: e.target.value})}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Host Login Button Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.adminBtnFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, adminBtnFontSize: e.target.value})}
+                        className="w-full bg-white border border-indigo-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* --- Section 1: Inner Input Fields & Registration Box --- */}
-                <div className="bg-sky-50/70 border-2 border-sky-200 rounded-2xl p-5 space-y-4">
-                  <h4 className="text-sm font-black text-sky-900 flex items-center gap-2">
-                    <Box className="w-4 h-4 text-sky-600" /> Registration Inner Input Fields & Borders
+                {/* 2. Left Host Profile Card Elements */}
+                <div className="bg-pink-50/80 border-2 border-pink-200 rounded-2xl p-5 space-y-4">
+                  <h4 className="text-sm font-black text-pink-900 flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-pink-600" /> 2. Left Host Profile Card Font Sizes
                   </h4>
-                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Input Field BG Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.inputFieldBg} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, inputFieldBg: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.inputFieldBg}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Verified Badge Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.verifiedBadgeFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, verifiedBadgeFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 10px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Input Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.inputFieldBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, inputFieldBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.inputFieldBorderColor}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Host Subtag Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.subtagFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, subtagFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Input Text Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.inputFieldText} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, inputFieldText: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.inputFieldText}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Host Bio Quote Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.bioFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, bioFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Input Border Thickness</label>
-                      <select 
-                        value={editThemeForm.inputFieldBorderWidth}
-                        onChange={(e) => setEditThemeForm({ ...editThemeForm, inputFieldBorderWidth: e.target.value })}
-                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                      >
-                        <option value="1px">Thin (1px)</option>
-                        <option value="1.5px">Soft (1.5px)</option>
-                        <option value="2px">Standard (2px)</option>
-                        <option value="3px">Thick (3px)</option>
-                      </select>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Stats Card Number Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.statsNumberFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, statsNumberFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 18px"
+                      />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Upload Box Border Style</label>
-                      <select 
-                        value={editThemeForm.uploadBoxBorderStyle}
-                        onChange={(e) => setEditThemeForm({ ...editThemeForm, uploadBoxBorderStyle: e.target.value })}
-                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                      >
-                        <option value="dashed">Dashed Line</option>
-                        <option value="solid">Solid Line</option>
-                        <option value="dotted">Dotted Line</option>
-                      </select>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Stats Card Label Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.statsLabelFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, statsLabelFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 10px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Upload Box Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.uploadBoxBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, uploadBoxBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.uploadBoxBorderColor}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Chat Button Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.chatBtnFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, chatBtnFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Total Gem Box Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.calcBoxBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, calcBoxBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.calcBoxBorderColor}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Gems 200/wave Badge Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.gemsBadgeFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, gemsBadgeFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Profile Bottom Note Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.profileFooterFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, profileFooterFontSize: e.target.value})}
+                        className="w-full bg-white border border-pink-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 11px"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* --- Section 2: Host Profile Stats Cards --- */}
-                <div className="bg-pink-50/70 border-2 border-pink-200 rounded-2xl p-5 space-y-4">
-                  <h4 className="text-sm font-black text-pink-900 flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-pink-600" /> Host Stats 3 Inner Boxes
+                {/* 3. Right Registration Form Card Elements */}
+                <div className="bg-sky-50/80 border-2 border-sky-200 rounded-2xl p-5 space-y-4">
+                  <h4 className="text-sm font-black text-sky-900 flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-sky-600" /> 3. Registration Form Card Font Sizes
                   </h4>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Stats Boxes Background</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-pink-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.statsBoxBg} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, statsBoxBg: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.statsBoxBg}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Form Main Title Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.regTitleFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, regTitleFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 24px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Stats Boxes Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-pink-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.statsBoxBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, statsBoxBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.statsBoxBorderColor}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Form Subtitle Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.regSubtextFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, regSubtextFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Stats Text Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-pink-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.statsTextColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, statsTextColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.statsTextColor}</span>
-                      </div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Field Label Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.formLabelFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, formLabelFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Input Text & Select Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.inputFieldFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, inputFieldFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Upload Box Main Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.uploadTextFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, uploadTextFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Upload Box Subtext Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.uploadSubtextFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, uploadSubtextFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 10px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Total Calc Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.calcTextFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, calcTextFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Total Gems Number Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.calcGemsFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, calcGemsFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 20px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Submit Button Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.submitBtnFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, submitBtnFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 16px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Form Bottom Footer Note Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.formFooterFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, formFooterFontSize: e.target.value})}
+                        className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 11px"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* --- Section 3: Party Rules Emoji Container Boxes --- */}
-                <div className="bg-emerald-50/70 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
+                {/* 4. Party Rules Section Elements */}
+                <div className="bg-emerald-50/80 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
                   <h4 className="text-sm font-black text-emerald-900 flex items-center gap-2">
-                    <Smile className="w-4 h-4 text-emerald-600" /> Party Rules Small Emoji Boxes
+                    <Sliders className="w-4 h-4 text-emerald-600" /> 4. Party Rules Section Font Sizes & Colors
                   </h4>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Emoji Box BG Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.emojiBoxBg} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, emojiBoxBg: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.emojiBoxBg}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Emoji Box Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.emojiBoxBorderColor} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, emojiBoxBorderColor: e.target.value})}
-                          className="w-7 h-7 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.emojiBoxBorderColor}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Emoji Box Border Thickness</label>
-                      <select 
-                        value={editThemeForm.emojiBoxBorderWidth}
-                        onChange={(e) => setEditThemeForm({ ...editThemeForm, emojiBoxBorderWidth: e.target.value })}
+                      <label className="block text-xs font-black text-gray-800 mb-1">Category Heading Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.rulesCategoryFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesCategoryFontSize: e.target.value})}
                         className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                      >
-                        <option value="1px">Thin (1px)</option>
-                        <option value="1.5px">Soft (1.5px)</option>
-                        <option value="2px">Standard (2px)</option>
-                        <option value="3px">Thick (3px)</option>
-                      </select>
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Section Title Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.rulesTitleFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesTitleFontSize: e.target.value})}
+                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 24px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rule Card Title Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.rulesBoxTitleFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxTitleFontSize: e.target.value})}
+                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 16px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rule Card Bullet/Text Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.rulesBoxBodyFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBodyFontSize: e.target.value})}
+                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Emoji Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.emojiFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, emojiFontSize: e.target.value})}
+                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 20px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box BG Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.rulesBoxBg} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBg: e.target.value})}
+                          className="w-6 h-6 rounded border cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxBg}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box Border Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.rulesBoxBorder} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBorder: e.target.value})}
+                          className="w-6 h-6 rounded border cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxBorder}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box Text Color</label>
+                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
+                        <input 
+                          type="color" 
+                          value={editThemeForm.rulesBoxText} 
+                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxText: e.target.value})}
+                          className="w-6 h-6 rounded border cursor-pointer"
+                        />
+                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxText}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Global Font & Main Container Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  
-                  {/* Global Font & Page BG */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Website Main Font & Background</h4>
+                {/* 5. Bottom Discord Banner Elements */}
+                <div className="bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-5 space-y-4">
+                  <h4 className="text-sm font-black text-amber-900 flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-amber-600" /> 5. Bottom Discord Banner Font Sizes
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-700 mb-1">Global Font Family</label>
-                      <select 
-                        value={editThemeForm.fontFamily}
-                        onChange={(e) => setEditThemeForm({ ...editThemeForm, fontFamily: e.target.value })}
-                        className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-900"
-                      >
-                        {fontOptions.map((f, i) => (
-                          <option key={i} value={f.value}>{f.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Page Background Color</label>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Badge Font Size</label>
                       <input 
-                        type="color" 
-                        value={editThemeForm.pageBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, pageBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                        type="text"
+                        value={editThemeForm.bannerBadgeFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerBadgeFontSize: e.target.value})}
+                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 10px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Title Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.bannerTitleFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerTitleFontSize: e.target.value})}
+                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 24px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Description Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.bannerTextFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerTextFontSize: e.target.value})}
+                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 12px"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Button Font Size</label>
+                      <input 
+                        type="text"
+                        value={editThemeForm.bannerBtnFontSize}
+                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerBtnFontSize: e.target.value})}
+                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        placeholder="e.g. 14px"
                       />
                     </div>
                   </div>
+                </div>
 
-                  {/* Profile Card & Avatar */}
+                {/* Global Font Family & Alignment */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Host Profile Card & Avatar</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Card Background</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.profileBoxBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Card Outer Border</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.profileBoxBorder} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBorder: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Avatar Ring Border</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.avatarRingColor} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, avatarRingColor: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Website Main Font Family</h4>
+                    <select 
+                      value={editThemeForm.fontFamily}
+                      onChange={(e) => setEditThemeForm({ ...editThemeForm, fontFamily: e.target.value })}
+                      className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-gray-900"
+                    >
+                      {fontOptions.map((f, i) => (
+                        <option key={i} value={f.value}>{f.name}</option>
+                      ))}
+                    </select>
                   </div>
-
-                  {/* Rules Card & Banner */}
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Rules Section & Discord Banner</h4>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Rules Outer Card BG</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.rulesBoxBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Rules Outer Card Border</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.rulesBoxBorder} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBorder: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs text-gray-700 font-bold">Discord Banner BG</label>
-                      <input 
-                        type="color" 
-                        value={editThemeForm.bannerBg} 
-                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerBg: e.target.value})}
-                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                      />
-                    </div>
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Host Profile Card BG</h4>
+                    <input 
+                      type="color" 
+                      value={editThemeForm.profileBoxBg} 
+                      onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBg: e.target.value})}
+                      className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                    />
                   </div>
-
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Registration Card BG</h4>
+                    <input 
+                      type="color" 
+                      value={editThemeForm.regBoxBg} 
+                      onChange={(e) => setEditThemeForm({...editThemeForm, regBoxBg: e.target.value})}
+                      className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                    />
+                  </div>
                 </div>
 
                 <div className="pt-2">
@@ -1193,7 +1493,7 @@ export default function App() {
                     type="submit"
                     className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <Save className="w-4 h-4" /> Save All Options to Cloud
+                    <Save className="w-4 h-4" /> Save All Granular Font Sizes & Theme to Cloud
                   </button>
                 </div>
               </form>
@@ -1253,7 +1553,7 @@ export default function App() {
                   <h4 className="text-xs font-black text-pink-900 uppercase tracking-wider">2. Host Profile Subtag & Bio</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Host Subtag Sentence ("The OG Party Host • 133LNO")</label>
+                      <label className="block text-xs font-black text-gray-900 mb-1">Host Subtag Sentence</label>
                       <input 
                         type="text"
                         value={editContentForm.hostSubtag}
@@ -1316,7 +1616,7 @@ export default function App() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border-b border-emerald-200">
                     <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Section Category Heading ("HOW IT WORKS")</label>
+                      <label className="block text-xs font-black text-gray-900 mb-1">Section Category Heading</label>
                       <input 
                         type="text"
                         value={editContentForm.rulesCategoryHeading}
@@ -1326,7 +1626,7 @@ export default function App() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Section Main Title ("Party Rules, Made Simple")</label>
+                      <label className="block text-xs font-black text-gray-900 mb-1">Section Main Title</label>
                       <input 
                         type="text"
                         value={editContentForm.rulesMainHeading}
@@ -1481,17 +1781,17 @@ export default function App() {
           </section>
         ) : (
           /* Public Hero Section */
-          <section id="booking" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <section id="booking" className={`grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch ${theme.regBoxAlignment === 'center' ? 'text-center' : ''}`}>
             
             {/* Left Card: Host Profile */}
             <div 
-              className="lg:col-span-5 border-2 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative overflow-hidden transition-colors" 
-              style={{ backgroundColor: theme.profileBoxBg, borderColor: theme.profileBoxBorder, color: theme.profileBoxText }}
+              className={`lg:col-span-5 border-2 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative overflow-hidden transition-colors ${theme.profileAlignment === 'center' ? 'items-center text-center' : ''}`} 
+              style={{ backgroundColor: theme.profileBoxBg, borderColor: theme.profileBoxBorder, color: theme.profileBoxText || '#111827' }}
             >
               <div className="absolute top-0 right-0 w-48 h-48 bg-pink-300/30 rounded-full blur-3xl pointer-events-none"></div>
 
-              <div>
-                <div className="flex items-center gap-4 mb-6">
+              <div className="w-full">
+                <div className={`flex items-center gap-4 mb-6 ${theme.profileAlignment === 'center' ? 'flex-col text-center' : ''}`}>
                   <div 
                     className="relative w-20 h-20 flex-shrink-0 p-1 rounded-full shadow-md"
                     style={{ backgroundColor: theme.avatarRingColor || '#ec4899' }}
@@ -1508,24 +1808,34 @@ export default function App() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xl sm:text-2xl">{siteContent.selectedSymbol}</span>
-                      <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-xl sm:text-2xl" />
-                      <span className="px-2.5 py-0.5 text-[10px] font-black bg-white text-pink-800 border border-pink-300 rounded-full shadow-sm whitespace-nowrap">
+                    <div className={`flex items-center gap-2 flex-wrap ${theme.profileAlignment === 'center' ? 'justify-center' : ''}`}>
+                      <span style={{ fontSize: theme.profileTitleFontSize || '24px' }}>{siteContent.selectedSymbol}</span>
+                      <RenderDynamicBrandName name={siteContent.brandName} customSize={theme.profileTitleFontSize || '24px'} />
+                      <span 
+                        className="px-2.5 py-0.5 font-black bg-white text-pink-800 border border-pink-300 rounded-full shadow-sm whitespace-nowrap"
+                        style={{ fontSize: theme.verifiedBadgeFontSize || '10px' }}
+                      >
                         {siteContent.verifiedBadgeText}
                       </span>
                     </div>
                     
                     <p 
-                      className="text-xs font-bold mt-1 tracking-wide"
-                      style={{ color: theme.subtagTextColor || '#be185d', fontFamily: theme.subtagFontFamily || theme.fontFamily }}
+                      className="font-bold mt-1 tracking-wide"
+                      style={{ 
+                        color: theme.subtagTextColor || '#be185d', 
+                        fontFamily: theme.subtagFontFamily || theme.fontFamily,
+                        fontSize: theme.subtagFontSize || '12px'
+                      }}
                     >
                       {siteContent.hostSubtag}
                     </p>
                   </div>
                 </div>
 
-                <blockquote className="text-gray-800 text-sm leading-relaxed border-l-4 border-pink-500 pl-4 italic mb-8 bg-white/90 py-3.5 rounded-r-2xl shadow-sm font-medium">
+                <blockquote 
+                  className="leading-relaxed border-l-4 border-pink-500 pl-4 italic mb-8 bg-white/90 py-3.5 rounded-r-2xl shadow-sm font-medium"
+                  style={{ color: theme.profileBoxText || '#111827', fontSize: theme.bioFontSize || '14px' }}
+                >
                   "{siteContent.hostBio}"
                 </blockquote>
 
@@ -1533,40 +1843,45 @@ export default function App() {
                 <div className="grid grid-cols-3 gap-3 mb-8" id="stats">
                   <div className="p-3 text-center shadow-sm" style={statsBoxStyle}>
                     <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                    <div className="text-xl font-black">{hostedParties}</div>
-                    <div className="text-[10px] uppercase tracking-wider font-bold opacity-80">Hosted Waves</div>
+                    <div className="font-black" style={{ fontSize: theme.statsNumberFontSize || '18px' }}>{hostedParties}</div>
+                    <div className="uppercase tracking-wider font-bold opacity-80" style={{ fontSize: theme.statsLabelFontSize || '10px' }}>Hosted Waves</div>
                   </div>
 
                   <div className="p-3 text-center shadow-sm" style={statsBoxStyle}>
                     <Flame className="w-5 h-5 text-pink-500 mx-auto mb-1" />
-                    <div className="text-xl font-black">{siteContent.maxPartiesSingleWave}</div>
-                    <div className="text-[10px] uppercase tracking-wider font-bold opacity-80">Parties in 1 Wave</div>
+                    <div className="font-black" style={{ fontSize: theme.statsNumberFontSize || '18px' }}>{siteContent.maxPartiesSingleWave}</div>
+                    <div className="uppercase tracking-wider font-bold opacity-80" style={{ fontSize: theme.statsLabelFontSize || '10px' }}>Parties in 1 Wave</div>
                   </div>
 
                   <div className="p-3 text-center shadow-sm" style={statsBoxStyle}>
                     <Clock className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                    <div className="text-xl font-black">15–19</div>
-                    <div className="text-[10px] uppercase tracking-wider font-bold opacity-80">UTC Window</div>
+                    <div className="font-black" style={{ fontSize: theme.statsNumberFontSize || '18px' }}>15–19</div>
+                    <div className="uppercase tracking-wider font-bold opacity-80" style={{ fontSize: theme.statsLabelFontSize || '10px' }}>UTC Window</div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-pink-200">
+              <div className="space-y-3 pt-4 border-t border-pink-200 w-full">
                 <div className="flex items-center gap-3">
                   <a 
                     href={siteContent.discordUrl} 
                     target="_blank" 
                     rel="noreferrer"
-                    style={buttonBorderStyle}
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-sm transition-all shadow-md hover:opacity-90"
+                    style={{ ...buttonBorderStyle, fontSize: theme.chatBtnFontSize || '14px' }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 font-bold transition-all shadow-md hover:opacity-90"
                   >
                     <MessageSquare className="w-4 h-4" /> Chat with Host
                   </a>
-                  <span className="px-3.5 py-3 bg-white border border-pink-300 text-pink-800 text-xs font-black rounded-2xl whitespace-nowrap shadow-sm">
+                  <span 
+                    className="px-3.5 py-3 bg-white border border-pink-300 text-pink-800 font-black rounded-2xl whitespace-nowrap shadow-sm"
+                    style={{ fontSize: theme.gemsBadgeFontSize || '12px' }}
+                  >
                     Gems 200 / wave
                   </span>
                 </div>
-                <p className="text-[11px] text-center text-gray-600 font-medium">Replies in under 5 minutes during party hours.</p>
+                <p className="text-center text-gray-600 font-medium" style={{ fontSize: theme.profileFooterFontSize || '11px' }}>
+                  Replies in under 5 minutes during party hours.
+                </p>
               </div>
 
             </div>
@@ -1579,9 +1894,9 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="w-6 h-6" style={{ color: theme.regBoxText }} />
-                  <h3 className="text-2xl font-black" style={{ color: theme.regBoxText }}>{siteContent.regTitle}</h3>
+                  <h3 className="font-black" style={{ color: theme.regBoxText, fontSize: theme.regTitleFontSize || '24px' }}>{siteContent.regTitle}</h3>
                 </div>
-                <p className="text-xs mb-6 font-bold" style={{ color: theme.regBoxText }}>{siteContent.regSubtext}</p>
+                <p className="mb-6 font-bold" style={{ color: theme.regBoxText, fontSize: theme.regSubtextFontSize || '12px' }}>{siteContent.regSubtext}</p>
 
                 {formError && (
                   <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-2xl text-xs font-black text-red-700 flex items-center gap-2">
@@ -1601,7 +1916,7 @@ export default function App() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-black mb-1.5" style={{ color: theme.regBoxText }}>
+                        <label className="block font-black mb-1.5" style={{ color: theme.regBoxText, fontSize: theme.formLabelFontSize || '12px' }}>
                           Game Name <span className="text-red-600">*</span>
                         </label>
                         <input 
@@ -1611,12 +1926,12 @@ export default function App() {
                           value={gameName}
                           onChange={(e) => setGameName(e.target.value)}
                           style={inputStyle}
-                          className="w-full px-4 py-2.5 text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
+                          className="w-full px-4 py-2.5 font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-black mb-1.5" style={{ color: theme.regBoxText }}>
+                        <label className="block font-black mb-1.5" style={{ color: theme.regBoxText, fontSize: theme.formLabelFontSize || '12px' }}>
                           Tag <span className="text-red-600">*</span>
                         </label>
                         <input 
@@ -1626,19 +1941,19 @@ export default function App() {
                           value={tag}
                           onChange={(e) => setTag(e.target.value)}
                           style={inputStyle}
-                          className="w-full px-4 py-2.5 text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
+                          className="w-full px-4 py-2.5 font-bold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-black mb-1.5" style={{ color: theme.regBoxText }}>Waves Count <span className="text-red-600">*</span></label>
+                        <label className="block font-black mb-1.5" style={{ color: theme.regBoxText, fontSize: theme.formLabelFontSize || '12px' }}>Waves Count <span className="text-red-600">*</span></label>
                         <select 
                           value={wavesCount}
                           onChange={(e) => setWavesCount(e.target.value)}
                           style={inputStyle}
-                          className="w-full px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
+                          className="w-full px-4 py-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
                         >
                           {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => (
                             <option key={num} value={num}>
@@ -1649,20 +1964,20 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-black mb-1.5" style={{ color: theme.regBoxText }}>Gems per Wave <span className="text-red-600">*</span></label>
+                        <label className="block font-black mb-1.5" style={{ color: theme.regBoxText, fontSize: theme.formLabelFontSize || '12px' }}>Gems per Wave <span className="text-red-600">*</span></label>
                         <input 
                           type="number" 
                           min={200}
                           value={gemsPerWave}
                           onChange={(e) => setGemsPerWave(e.target.value)}
                           style={inputStyle}
-                          className="w-full px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
+                          className="w-full px-4 py-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm transition-all"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black mb-1.5" style={{ color: theme.regBoxText }}>
+                      <label className="block font-black mb-1.5" style={{ color: theme.regBoxText, fontSize: theme.formLabelFontSize || '12px' }}>
                         Gems Screenshot Proof <span className="text-red-600">* (Mandatory)</span>
                       </label>
 
@@ -1685,8 +2000,8 @@ export default function App() {
                         ) : (
                           <div className="space-y-1">
                             <Upload className="w-6 h-6 mx-auto text-pink-600" />
-                            <p className="text-xs font-bold" style={{ color: theme.regBoxText }}>Upload screenshot of your gems (Mandatory)</p>
-                            <p className="text-[10px] opacity-80 font-medium" style={{ color: theme.regBoxText }}>PNG or JPG file</p>
+                            <p className="font-bold" style={{ color: theme.regBoxText, fontSize: theme.uploadTextFontSize || '12px' }}>Upload screenshot of your gems (Mandatory)</p>
+                            <p className="opacity-80 font-medium" style={{ color: theme.regBoxText, fontSize: theme.uploadSubtextFontSize || '10px' }}>PNG or JPG file</p>
                           </div>
                         )}
                       </div>
@@ -1694,18 +2009,18 @@ export default function App() {
 
                     <div 
                       style={calcBoxStyle}
-                      className="p-3.5 flex items-center justify-between text-sm shadow-sm"
+                      className="p-3.5 flex items-center justify-between shadow-sm"
                     >
-                      <span className="font-black" style={{ color: theme.calcBoxText }}>Total for your waves:</span>
-                      <span className="text-xl font-black text-pink-600 flex items-center gap-1">
+                      <span className="font-black" style={{ color: theme.calcBoxText, fontSize: theme.calcTextFontSize || '14px' }}>Total for your waves:</span>
+                      <span className="font-black text-pink-600 flex items-center gap-1" style={{ fontSize: theme.calcGemsFontSize || '20px' }}>
                         Gems {totalGems}
                       </span>
                     </div>
 
                     <button 
                       type="submit"
-                      style={buttonBorderStyle}
-                      className="w-full py-4 font-black text-sm transition-all shadow-md flex items-center justify-center gap-2 hover:opacity-90"
+                      style={{ ...buttonBorderStyle, fontSize: theme.submitBtnFontSize || '16px' }}
+                      className="w-full py-4 font-black transition-all shadow-md flex items-center justify-center gap-2 hover:opacity-90"
                     >
                       <Sparkles className="w-4 h-4" /> Submit Registration
                     </button>
@@ -1713,7 +2028,7 @@ export default function App() {
                 )}
               </div>
 
-              <p className="text-[11px] text-center mt-4 font-bold" style={{ color: theme.regBoxText }}>
+              <p className="text-center mt-4 font-bold" style={{ color: theme.regBoxText, fontSize: theme.formFooterFontSize || '11px' }}>
                 {siteContent.formFooterNote}
               </p>
             </div>
@@ -1721,18 +2036,18 @@ export default function App() {
           </section>
         )}
 
-        {/* Section 2: Party Rules */}
+        {/* Section 2: Party Rules Section */}
         <section id="rules" className="space-y-4">
-          <div>
+          <div className={`${theme.rulesBoxAlignment === 'center' ? 'text-center' : ''}`}>
             <p 
-              className="text-xs font-mono uppercase tracking-wider font-bold"
-              style={{ color: theme.rulesCategoryColor || '#0284c7' }}
+              className="font-mono uppercase tracking-wider font-bold"
+              style={{ color: theme.rulesCategoryColor || '#0284c7', fontSize: theme.rulesCategoryFontSize || '12px' }}
             >
               {siteContent.rulesCategoryHeading}
             </p>
             <h3 
-              className="text-2xl font-black"
-              style={{ color: theme.rulesTitleColor || '#111827' }}
+              className="font-black"
+              style={{ color: theme.rulesTitleColor || '#111827', fontSize: theme.rulesTitleFontSize || '24px' }}
             >
               {siteContent.rulesMainHeading}
             </h3>
@@ -1742,17 +2057,17 @@ export default function App() {
             
             {/* Box 1 */}
             <div 
-              className="border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors" 
-              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText }}
+              className={`border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors ${theme.rulesBoxAlignment === 'center' ? 'text-center flex flex-col items-center' : ''}`} 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText || '#111827' }}
             >
               <div 
                 style={emojiBoxStyle}
-                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm text-xl"
+                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm"
               >
-                {siteContent.rule1Emoji}
+                <span style={{ fontSize: theme.emojiFontSize || '20px' }}>{siteContent.rule1Emoji}</span>
               </div>
-              <h4 className="font-black text-base" style={{ color: theme.rulesBoxText }}>{siteContent.rule1Title}</h4>
-              <ul className="text-xs space-y-2 leading-relaxed font-bold" style={{ color: theme.rulesBoxText }}>
+              <h4 className="font-black" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxTitleFontSize || '16px' }}>{siteContent.rule1Title}</h4>
+              <ul className="space-y-2 leading-relaxed font-bold" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxBodyFontSize || '12px' }}>
                 <li>• {siteContent.rule1Bullet1}</li>
                 <li>• {siteContent.rule1Bullet2}</li>
                 <li>• {siteContent.rule1Bullet3}</li>
@@ -1761,17 +2076,17 @@ export default function App() {
 
             {/* Box 2 */}
             <div 
-              className="border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors" 
-              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText }}
+              className={`border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors ${theme.rulesBoxAlignment === 'center' ? 'text-center flex flex-col items-center' : ''}`} 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText || '#111827' }}
             >
               <div 
                 style={emojiBoxStyle}
-                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm text-xl"
+                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm"
               >
-                {siteContent.rule2Emoji}
+                <span style={{ fontSize: theme.emojiFontSize || '20px' }}>{siteContent.rule2Emoji}</span>
               </div>
-              <h4 className="font-black text-base" style={{ color: theme.rulesBoxText }}>{siteContent.rule2Title}</h4>
-              <ul className="text-xs space-y-2 leading-relaxed font-bold" style={{ color: theme.rulesBoxText }}>
+              <h4 className="font-black" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxTitleFontSize || '16px' }}>{siteContent.rule2Title}</h4>
+              <ul className="space-y-2 leading-relaxed font-bold" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxBodyFontSize || '12px' }}>
                 <li>• {siteContent.rule2Bullet1}</li>
                 <li>• {siteContent.rule2Bullet2}</li>
                 <li>• {hostedParties} {siteContent.rule2Bullet3}</li>
@@ -1780,18 +2095,18 @@ export default function App() {
 
             {/* Box 3 */}
             <div 
-              className="border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors" 
-              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText }}
+              className={`border-2 p-6 rounded-3xl space-y-3 shadow-md transition-colors ${theme.rulesBoxAlignment === 'center' ? 'text-center flex flex-col items-center' : ''}`} 
+              style={{ backgroundColor: theme.rulesBoxBg, borderColor: theme.rulesBoxBorder, color: theme.rulesBoxText || '#111827' }}
             >
               <div 
                 style={emojiBoxStyle}
-                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm text-xl"
+                className="w-10 h-10 flex items-center justify-center font-bold shadow-sm"
               >
-                {siteContent.rule3Emoji}
+                <span style={{ fontSize: theme.emojiFontSize || '20px' }}>{siteContent.rule3Emoji}</span>
               </div>
-              <h4 className="font-black text-base" style={{ color: theme.rulesBoxText }}>{siteContent.rule3Title}</h4>
-              <p className="text-xs font-black">{siteContent.rule3NextWave}</p>
-              <p className="text-xs leading-relaxed font-bold" style={{ color: theme.rulesBoxText }}>
+              <h4 className="font-black" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxTitleFontSize || '16px' }}>{siteContent.rule3Title}</h4>
+              <p className="font-black" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxBodyFontSize || '12px' }}>{siteContent.rule3NextWave}</p>
+              <p className="leading-relaxed font-bold" style={{ color: theme.rulesBoxText || '#111827', fontSize: theme.rulesBoxBodyFontSize || '12px' }}>
                 {siteContent.rule3Desc}
               </p>
             </div>
@@ -1809,11 +2124,14 @@ export default function App() {
           }}
         >
           <div className="space-y-2 text-center md:text-left">
-            <span className="px-3 py-1 bg-white text-pink-800 text-[10px] font-black rounded-full border border-pink-300 shadow-sm">
+            <span 
+              className="px-3 py-1 bg-white text-pink-800 font-black rounded-full border border-pink-300 shadow-sm"
+              style={{ fontSize: theme.bannerBadgeFontSize || '10px' }}
+            >
               {siteContent.bannerBadgeText}
             </span>
-            <h3 className="text-2xl font-black" style={{ color: theme.bannerTextColor }}>{siteContent.bannerTitle}</h3>
-            <p className="text-xs max-w-xl font-medium" style={{ color: theme.bannerTextColor }}>
+            <h3 className="font-black" style={{ color: theme.bannerTextColor, fontSize: theme.bannerTitleFontSize || '24px' }}>{siteContent.bannerTitle}</h3>
+            <p className="max-w-xl font-medium" style={{ color: theme.bannerTextColor, fontSize: theme.bannerTextFontSize || '12px' }}>
               {siteContent.bannerText}
             </p>
           </div>
@@ -1822,8 +2140,8 @@ export default function App() {
             href={siteContent.discordUrl} 
             target="_blank" 
             rel="noreferrer"
-            style={buttonBorderStyle}
-            className="px-6 py-3.5 font-black text-sm transition-all shadow-md flex items-center gap-2 whitespace-nowrap hover:opacity-90"
+            style={{ ...buttonBorderStyle, fontSize: theme.bannerBtnFontSize || '14px' }}
+            className="px-6 py-3.5 font-black transition-all shadow-md flex items-center gap-2 whitespace-nowrap hover:opacity-90"
           >
             <MessageSquare className="w-4 h-4" /> Open Discord Profile
           </a>
@@ -1876,7 +2194,7 @@ export default function App() {
               <button 
                 type="submit"
                 style={adminBtnBorderStyle}
-                className="w-full py-3.5 font-black text-sm transition-all shadow-md hover:opacity-90"
+                className="w-full py-3.5 font-black transition-all shadow-md hover:opacity-90"
               >
                 Enter Command Center
               </button>
@@ -1902,7 +2220,7 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium">
+      <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium relative z-10">
         <p>© 2026 {siteContent.brandName} • Sunday City Private Waves Host</p>
       </footer>
     </div>

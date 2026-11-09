@@ -7,3 +7,36 @@ body {
   background-color: #ffffff;
   color: #111827;
 }
+
+/* Snowfall Smooth Falling Keyframe */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-20px) translateX(0px);
+  }
+  50% {
+    transform: translateY(50vh) translateX(25px);
+  }
+  100% {
+    transform: translateY(105vh) translateX(-15px);
+  }
+}
+
+/* Sparkle / Blink Pulsing Star Keyframe */
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+.animate-snowfall {
+  animation: snowfall linear infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle ease-in-out infinite;
+}
