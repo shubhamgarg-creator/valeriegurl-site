@@ -6,20 +6,4 @@ body {
   margin: 0;
   background-color: #ffffff;
   color: #111827;
-  overflow-x: hidden;
-}
-
-@keyframes snowfall {
-  0% {
-    transform: translateY(-20px) rotate(0deg);
-  }
-  100% {
-    transform: translateY(105vh) rotate(360deg);
-  }
-}
-
-.animate-snowfall {
-  animation-name: snowfall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
 }
