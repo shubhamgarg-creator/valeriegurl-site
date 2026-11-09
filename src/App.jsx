@@ -21,14 +21,15 @@ import {
   Edit3,
   Save,
   Globe,
-  FileText,
   List,
   Palette,
   Type,
   RefreshCw,
   Wifi,
   AlertCircle,
-  Sliders
+  Sliders,
+  Snowflake,
+  Zap
 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION ---
@@ -45,6 +46,122 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// --- ANIMATED CANVAS / EFFECTS COMPONENT ---
+const DynamicBackgroundEffects = ({ theme }) => {
+  const { 
+    enableSnowfall = true, 
+    snowCount = 40, 
+    snowSpeed = 3, 
+    snowSize = 4, 
+    snowColor = "#ffffff",
+    snowShape = "snowflake",
+
+    enableBlinkGlow = true, 
+    blinkCount = 20, 
+    blinkSpeed = 2, 
+    blinkColor1 = "#ff00d4", 
+    blinkColor2 = "#00f0ff" 
+  } = theme;
+
+  const [particles, setParticles] = useState([]);
+  const [snowflakes, setSnowflakes] = useState([]);
+
+  // Generate Blinking / Glowing Orbs
+  useEffect(() => {
+    if (!enableBlinkGlow) {
+      setParticles([]);
+      return;
+    }
+    const count = parseInt(blinkCount) || 20;
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      arr.push({
+        id: i,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: Math.random() * 14 + 6,
+        color: Math.random() > 0.5 ? blinkColor1 : blinkColor2,
+        duration: (Math.random() * 2 + 1) / (parseFloat(blinkSpeed) || 1),
+        delay: Math.random() * 3
+      });
+    }
+    setParticles(arr);
+  }, [enableBlinkGlow, blinkCount, blinkSpeed, blinkColor1, blinkColor2]);
+
+  // Generate Snowflakes
+  useEffect(() => {
+    if (!enableSnowfall) {
+      setSnowflakes([]);
+      return;
+    }
+    const count = parseInt(snowCount) || 40;
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      arr.push({
+        id: i,
+        left: Math.random() * 100,
+        size: Math.random() * (parseInt(snowSize) || 4) + 2,
+        duration: (Math.random() * 5 + 4) / (parseFloat(snowSpeed) || 1),
+        delay: Math.random() * 5,
+        opacity: Math.random() * 0.7 + 0.3
+      });
+    }
+    setSnowflakes(arr);
+  }, [enableSnowfall, snowCount, snowSpeed, snowSize, snowColor, snowShape]);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {/* 1. Blinking Orbs Layer */}
+      {enableBlinkGlow && particles.map((p) => (
+        <div
+          key={`blink-${p.id}`}
+          className="absolute rounded-full filter blur-[2px] animate-pulse"
+          style={{
+            top: `${p.top}%`,
+            left: `${p.left}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            boxShadow: `0 0 15px ${p.color}, 0 0 25px ${p.color}`,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`
+          }}
+        />
+      ))}
+
+      {/* 2. Snowfall Layer */}
+      {enableSnowfall && snowflakes.map((s) => (
+        <div
+          key={`snow-${s.id}`}
+          className="absolute animate-snowfall"
+          style={{
+            left: `${s.left}%`,
+            width: `${s.size * 2}px`,
+            height: `${s.size * 2}px`,
+            color: snowColor,
+            opacity: s.opacity,
+            animationDuration: `${s.duration}s`,
+            animationDelay: `${s.delay}s`
+          }}
+        >
+          {snowShape === 'snowflake' ? (
+            <Snowflake className="w-full h-full" style={{ color: snowColor }} />
+          ) : snowShape === 'heart' ? (
+            <span style={{ fontSize: `${s.size * 2}px` }}>💖</span>
+          ) : snowShape === 'star' ? (
+            <span style={{ fontSize: `${s.size * 2}px` }}>✨</span>
+          ) : (
+            <div 
+              className="rounded-full bg-current shadow-sm"
+              style={{ width: `${s.size}px`, height: `${s.size}px`, backgroundColor: snowColor }} 
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function App() {
   const [gameName, setGameName] = useState('');
@@ -63,11 +180,26 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
 
-  // --- DEFAULT GRANULAR FONT SIZES & FULL DYNAMIC THEME ---
+  // --- DEFAULT THEME + ANIMATIONS & SNOWFALL CONTROLS ---
   const defaultTheme = {
     fontFamily: "'Inter', sans-serif",
     pageBg: '#ffffff',
     
+    // Animated Blink Glow FX
+    enableBlinkGlow: true,
+    blinkCount: 25,
+    blinkSpeed: 2,
+    blinkColor1: '#ff00d4',
+    blinkColor2: '#00f0ff',
+
+    // Snowfall FX Controls
+    enableSnowfall: true,
+    snowCount: 45,
+    snowSpeed: 1.5,
+    snowSize: 6,
+    snowColor: '#ec4899',
+    snowShape: 'snowflake', // 'snowflake' | 'circle' | 'heart' | 'star'
+
     // Top Navbar Font Sizes & Colors
     headerBg: '#59ffe5',
     headerText: '#111827',
@@ -404,13 +536,13 @@ export default function App() {
   const handleSaveTheme = (e) => {
     e.preventDefault();
     set(ref(db, 'valerie_site/theme'), editThemeForm);
-    showTempMsg("All granular font sizes, colors, alignments & borders synced to cloud!");
+    showTempMsg("All Animations, Snowfall, Font Sizes & Theme synced to cloud!");
   };
 
   const handleResetTheme = () => {
     set(ref(db, 'valerie_site/theme'), defaultTheme);
     setEditThemeForm(defaultTheme);
-    showTempMsg("Theme reset to default!");
+    showTempMsg("Theme & Animations reset to default!");
   };
 
   const showTempMsg = (msg) => {
@@ -513,8 +645,6 @@ export default function App() {
     { name: "Native System UI", value: "system-ui, -apple-system, sans-serif" }
   ];
 
-  const fontSizePresetList = ["10px", "11px", "12px", "13px", "14px", "15px", "16px", "18px", "20px", "22px", "24px", "28px", "32px", "36px", "40px", "48px"];
-
   const getAlignmentClass = (align) => {
     if (align === 'center') return 'text-center items-center justify-center';
     if (align === 'right') return 'text-right items-end justify-end';
@@ -523,13 +653,15 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen selection:bg-pink-200 selection:text-pink-900 transition-colors duration-200"
+      className="min-h-screen relative selection:bg-pink-200 selection:text-pink-900 transition-colors duration-200"
       style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily, color: theme.rulesBoxText || '#111827' }}
     >
-      
+      {/* Dynamic Background FX (Snowfall + Blinking Orbs) */}
+      <DynamicBackgroundEffects theme={theme} />
+
       {/* 1. Top Header Navbar */}
       <header 
-        className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2" 
+        className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2 relative" 
         style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: 'rgba(0,0,0,0.15)' }}
       >
         <div className={`max-w-7xl mx-auto flex items-center justify-between ${theme.headerAlignment === 'center' ? 'flex-col sm:flex-row' : ''}`}>
@@ -598,7 +730,7 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12 relative z-10">
         
         {saveSuccessMsg && (
           <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white font-black px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
@@ -608,13 +740,13 @@ export default function App() {
 
         {activeTab === 'dashboard' && isLoggedIn ? (
           /* Admin Dashboard */
-          <section className="bg-pink-50 border-2 border-pink-200 rounded-3xl p-6 shadow-md space-y-8">
+          <section className="bg-white/95 backdrop-blur-md border-2 border-pink-200 rounded-3xl p-6 shadow-md space-y-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-pink-200">
               <div>
                 <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                  <ShieldCheck className="text-pink-600" /> COMMAND CENTER (GRANULAR FONT SIZE CONTROL FOR EVERY ELEMENT)
+                  <ShieldCheck className="text-pink-600" /> COMMAND CENTER (ANIMATIONS, SNOWFALL & GRANULAR CONTROLS)
                 </h2>
-                <p className="text-xs text-gray-600 font-bold">Customize every single text font size, color, background, alignment & border on the site.</p>
+                <p className="text-xs text-gray-600 font-bold">Full customization & toggle ON/OFF for Snowfall FX, Blink Orbs, Font Sizes, Colors & Text.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -647,7 +779,18 @@ export default function App() {
                     : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
                 }`}
               >
-                <Palette className="w-3.5 h-3.5" /> Font Sizes (Every Single Element)
+                <Palette className="w-3.5 h-3.5" /> Font Sizes & Colors
+              </button>
+
+              <button 
+                onClick={() => setAdminViewTab('animations')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  adminViewTab === 'animations' 
+                    ? 'bg-cyan-600 text-white shadow-sm' 
+                    : 'bg-white text-gray-700 hover:text-gray-900 border border-pink-200'
+                }`}
+              >
+                <Snowflake className="w-3.5 h-3.5 animate-spin" /> Animations & Snowfall FX
               </button>
 
               <button 
@@ -800,6 +943,201 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {/* TAB NEW: ANIMATIONS & SNOWFALL FX CUSTOMIZATION */}
+            {adminViewTab === 'animations' && (
+              <form onSubmit={handleSaveTheme} className="bg-white border-2 border-cyan-200 rounded-2xl p-6 space-y-8 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                      <Snowflake className="text-cyan-600 animate-spin" /> Background Animations & Snowfall Customization
+                    </h3>
+                    <p className="text-xs text-gray-600 font-bold">Enable/Disable & tweak speed, density, shapes & glowing colors for Snowfall & Blink Glow Orbs.</p>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleResetTheme}
+                    className="flex items-center gap-1 text-xs text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200 font-bold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Reset Defaults
+                  </button>
+                </div>
+
+                {/* 1. SNOWFALL FX CONTROL BOX */}
+                <div className="bg-sky-50/80 border-2 border-sky-200 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-sky-900 flex items-center gap-2">
+                      <Snowflake className="w-4 h-4 text-sky-600" /> 1. Snowfall Effect Controls
+                    </h4>
+                    
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-full border border-sky-300 shadow-sm">
+                      <input 
+                        type="checkbox" 
+                        checked={editThemeForm.enableSnowfall} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, enableSnowfall: e.target.checked})}
+                        className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500"
+                      />
+                      <span className="text-xs font-black text-sky-900">
+                        {editThemeForm.enableSnowfall ? "Snowfall ENABLED" : "Snowfall DISABLED"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {editThemeForm.enableSnowfall && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snow Density (Count)</label>
+                        <input 
+                          type="number"
+                          min={10}
+                          max={150}
+                          value={editThemeForm.snowCount}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, snowCount: e.target.value})}
+                          className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Fall Speed Multiplier</label>
+                        <input 
+                          type="number"
+                          step="0.5"
+                          min={0.5}
+                          max={5}
+                          value={editThemeForm.snowSpeed}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, snowSpeed: e.target.value})}
+                          className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snow Particle Size</label>
+                        <input 
+                          type="number"
+                          min={2}
+                          max={15}
+                          value={editThemeForm.snowSize}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, snowSize: e.target.value})}
+                          className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snow Particle Shape</label>
+                        <select 
+                          value={editThemeForm.snowShape}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, snowShape: e.target.value})}
+                          className="w-full bg-white border border-sky-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        >
+                          <option value="snowflake">❄️ Snowflake</option>
+                          <option value="circle">⚪ Round Dots</option>
+                          <option value="heart">💖 Pink Hearts</option>
+                          <option value="star">✨ Shining Stars</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Snow Color</label>
+                        <div className="flex items-center gap-2 bg-white p-1.5 border border-sky-300 rounded-xl">
+                          <input 
+                            type="color" 
+                            value={editThemeForm.snowColor} 
+                            onChange={(e) => setEditThemeForm({...editThemeForm, snowColor: e.target.value})}
+                            className="w-6 h-6 rounded border cursor-pointer"
+                          />
+                          <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.snowColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. BLINK GLOW ORBS CONTROL BOX */}
+                <div className="bg-fuchsia-50/80 border-2 border-fuchsia-200 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-fuchsia-900 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-fuchsia-600" /> 2. Blink Glow Orbs Controls
+                    </h4>
+
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-full border border-fuchsia-300 shadow-sm">
+                      <input 
+                        type="checkbox" 
+                        checked={editThemeForm.enableBlinkGlow} 
+                        onChange={(e) => setEditThemeForm({...editThemeForm, enableBlinkGlow: e.target.checked})}
+                        className="w-4 h-4 text-fuchsia-600 rounded focus:ring-fuchsia-500"
+                      />
+                      <span className="text-xs font-black text-fuchsia-900">
+                        {editThemeForm.enableBlinkGlow ? "Blink Orbs ENABLED" : "Blink Orbs DISABLED"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {editThemeForm.enableBlinkGlow && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Total Blinking Orbs</label>
+                        <input 
+                          type="number"
+                          min={5}
+                          max={60}
+                          value={editThemeForm.blinkCount}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, blinkCount: e.target.value})}
+                          className="w-full bg-white border border-fuchsia-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Blink Speed Multiplier</label>
+                        <input 
+                          type="number"
+                          step="0.5"
+                          min={0.5}
+                          max={5}
+                          value={editThemeForm.blinkSpeed}
+                          onChange={(e) => setEditThemeForm({...editThemeForm, blinkSpeed: e.target.value})}
+                          className="w-full bg-white border border-fuchsia-300 rounded-xl p-2 text-xs font-bold text-gray-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Glow Color 1</label>
+                        <div className="flex items-center gap-2 bg-white p-1.5 border border-fuchsia-300 rounded-xl">
+                          <input 
+                            type="color" 
+                            value={editThemeForm.blinkColor1} 
+                            onChange={(e) => setEditThemeForm({...editThemeForm, blinkColor1: e.target.value})}
+                            className="w-6 h-6 rounded border cursor-pointer"
+                          />
+                          <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.blinkColor1}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 mb-1">Glow Color 2</label>
+                        <div className="flex items-center gap-2 bg-white p-1.5 border border-fuchsia-300 rounded-xl">
+                          <input 
+                            type="color" 
+                            value={editThemeForm.blinkColor2} 
+                            onChange={(e) => setEditThemeForm({...editThemeForm, blinkColor2: e.target.value})}
+                            className="w-6 h-6 rounded border cursor-pointer"
+                          />
+                          <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.blinkColor2}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> Save Animation & Snowfall FX Settings to Cloud
+                  </button>
+                </div>
+              </form>
             )}
 
             {/* TAB 2: GRANULAR FONT SIZE CONTROLS FOR EVERY SINGLE ELEMENT */}
@@ -1068,150 +1406,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 4. Party Rules Section Elements */}
-                <div className="bg-emerald-50/80 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
-                  <h4 className="text-sm font-black text-emerald-900 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-emerald-600" /> 4. Party Rules Section Font Sizes & Colors
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Category Heading Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.rulesCategoryFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesCategoryFontSize: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 12px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Section Title Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.rulesTitleFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesTitleFontSize: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 24px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rule Card Title Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.rulesBoxTitleFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxTitleFontSize: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 16px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rule Card Bullet/Text Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.rulesBoxBodyFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBodyFontSize: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 12px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Emoji Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.emojiFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, emojiFontSize: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 20px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box BG Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.rulesBoxBg} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBg: e.target.value})}
-                          className="w-6 h-6 rounded border cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxBg}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box Border Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.rulesBoxBorder} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxBorder: e.target.value})}
-                          className="w-6 h-6 rounded border cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxBorder}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Rules Box Text Color</label>
-                      <div className="flex items-center gap-2 bg-white p-1.5 border border-emerald-300 rounded-xl">
-                        <input 
-                          type="color" 
-                          value={editThemeForm.rulesBoxText} 
-                          onChange={(e) => setEditThemeForm({...editThemeForm, rulesBoxText: e.target.value})}
-                          className="w-6 h-6 rounded border cursor-pointer"
-                        />
-                        <span className="text-xs font-mono font-bold text-gray-900">{editThemeForm.rulesBoxText}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. Bottom Discord Banner Elements */}
-                <div className="bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-5 space-y-4">
-                  <h4 className="text-sm font-black text-amber-900 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-amber-600" /> 5. Bottom Discord Banner Font Sizes
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Badge Font Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.bannerBadgeFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerBadgeFontSize: e.target.value})}
-                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 10px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Title Font Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.bannerTitleFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerTitleFontSize: e.target.value})}
-                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 24px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Description Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.bannerTextFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerTextFontSize: e.target.value})}
-                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 12px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-800 mb-1">Banner Button Font Size</label>
-                      <input 
-                        type="text"
-                        value={editThemeForm.bannerBtnFontSize}
-                        onChange={(e) => setEditThemeForm({...editThemeForm, bannerBtnFontSize: e.target.value})}
-                        className="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-gray-900"
-                        placeholder="e.g. 14px"
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Global Font Family & Alignment */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
@@ -1227,11 +1421,11 @@ export default function App() {
                     </select>
                   </div>
                   <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3">
-                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Host Profile Card BG</h4>
+                    <h4 className="text-xs font-black text-gray-900 border-b pb-1">Page Background Color</h4>
                     <input 
                       type="color" 
-                      value={editThemeForm.profileBoxBg} 
-                      onChange={(e) => setEditThemeForm({...editThemeForm, profileBoxBg: e.target.value})}
+                      value={editThemeForm.pageBg} 
+                      onChange={(e) => setEditThemeForm({...editThemeForm, pageBg: e.target.value})}
                       className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
                     />
                   </div>
@@ -1328,148 +1522,6 @@ export default function App() {
                         onChange={(e) => setEditContentForm({...editContentForm, hostBio: e.target.value})}
                         className="w-full bg-white border border-pink-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
                       />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section C: Registration Box Titles & Footers */}
-                <div className="bg-sky-50/60 p-4 rounded-2xl border border-sky-200 space-y-4">
-                  <h4 className="text-xs font-black text-sky-900 uppercase tracking-wider">3. Wave Registration Box Titles & Footer</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Form Main Title</label>
-                      <input 
-                        type="text"
-                        value={editContentForm.regTitle}
-                        onChange={(e) => setEditContentForm({...editContentForm, regTitle: e.target.value})}
-                        className="w-full bg-white border border-sky-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Form Subtitle Sentence</label>
-                      <input 
-                        type="text"
-                        value={editContentForm.regSubtext}
-                        onChange={(e) => setEditContentForm({...editContentForm, regSubtext: e.target.value})}
-                        className="w-full bg-white border border-sky-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Form Bottom Sentence</label>
-                      <input 
-                        type="text"
-                        value={editContentForm.formFooterNote}
-                        onChange={(e) => setEditContentForm({...editContentForm, formFooterNote: e.target.value})}
-                        className="w-full bg-white border border-sky-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section D: Party Rules Section Sentences & Emojis */}
-                <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200 space-y-4">
-                  <h4 className="text-xs font-black text-emerald-900 uppercase tracking-wider">4. Party Rules Section Main Headings & Box Sentences</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border-b border-emerald-200">
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Section Category Heading</label>
-                      <input 
-                        type="text"
-                        value={editContentForm.rulesCategoryHeading}
-                        onChange={(e) => setEditContentForm({...editContentForm, rulesCategoryHeading: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Section Main Title</label>
-                      <input 
-                        type="text"
-                        value={editContentForm.rulesMainHeading}
-                        onChange={(e) => setEditContentForm({...editContentForm, rulesMainHeading: e.target.value})}
-                        className="w-full bg-white border border-emerald-300 rounded-xl p-2.5 text-xs text-gray-900 font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Box 1 Customizer */}
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
-                    <h5 className="text-xs font-black text-gray-900">Rule Box 1 Customizer</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700">Emoji</label>
-                        <input type="text" value={editContentForm.rule1Emoji} onChange={(e) => setEditContentForm({...editContentForm, rule1Emoji: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                      <div className="md:col-span-3">
-                        <label className="block text-[11px] font-bold text-gray-700">Box 1 Title</label>
-                        <input type="text" value={editContentForm.rule1Title} onChange={(e) => setEditContentForm({...editContentForm, rule1Title: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <input type="text" value={editContentForm.rule1Bullet1} onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet1: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                      <input type="text" value={editContentForm.rule1Bullet2} onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet2: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                      <input type="text" value={editContentForm.rule1Bullet3} onChange={(e) => setEditContentForm({...editContentForm, rule1Bullet3: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                    </div>
-                  </div>
-
-                  {/* Box 2 Customizer */}
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
-                    <h5 className="text-xs font-black text-gray-900">Rule Box 2 Customizer</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700">Emoji</label>
-                        <input type="text" value={editContentForm.rule2Emoji} onChange={(e) => setEditContentForm({...editContentForm, rule2Emoji: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                      <div className="md:col-span-3">
-                        <label className="block text-[11px] font-bold text-gray-700">Box 2 Title</label>
-                        <input type="text" value={editContentForm.rule2Title} onChange={(e) => setEditContentForm({...editContentForm, rule2Title: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <input type="text" value={editContentForm.rule2Bullet1} onChange={(e) => setEditContentForm({...editContentForm, rule2Bullet1: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                      <input type="text" value={editContentForm.rule2Bullet2} onChange={(e) => setEditContentForm({...editContentForm, rule2Bullet2: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                      <input type="text" value={editContentForm.rule2Bullet3} onChange={(e) => setEditContentForm({...editContentForm, rule2Bullet3: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                    </div>
-                  </div>
-
-                  {/* Box 3 Customizer */}
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
-                    <h5 className="text-xs font-black text-gray-900">Rule Box 3 Customizer</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700">Emoji</label>
-                        <input type="text" value={editContentForm.rule3Emoji} onChange={(e) => setEditContentForm({...editContentForm, rule3Emoji: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                      <div className="md:col-span-3">
-                        <label className="block text-[11px] font-bold text-gray-700">Box 3 Title</label>
-                        <input type="text" value={editContentForm.rule3Title} onChange={(e) => setEditContentForm({...editContentForm, rule3Title: e.target.value})} className="w-full border rounded-lg p-1.5 text-xs font-bold" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <input type="text" value={editContentForm.rule3NextWave} onChange={(e) => setEditContentForm({...editContentForm, rule3NextWave: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                      <input type="text" value={editContentForm.rule3Desc} onChange={(e) => setEditContentForm({...editContentForm, rule3Desc: e.target.value})} className="border rounded-lg p-1.5 text-xs font-bold" />
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Section E: Bottom Banner Sentences */}
-                <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200 space-y-4">
-                  <h4 className="text-xs font-black text-amber-900 uppercase tracking-wider">5. Bottom Discord Banner Sentences</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Badge Text</label>
-                      <input type="text" value={editContentForm.bannerBadgeText} onChange={(e) => setEditContentForm({...editContentForm, bannerBadgeText: e.target.value})} className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-xs font-bold" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Banner Main Title</label>
-                      <input type="text" value={editContentForm.bannerTitle} onChange={(e) => setEditContentForm({...editContentForm, bannerTitle: e.target.value})} className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-xs font-bold" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-gray-900 mb-1">Banner Description Sentence</label>
-                      <input type="text" value={editContentForm.bannerText} onChange={(e) => setEditContentForm({...editContentForm, bannerText: e.target.value})} className="w-full bg-white border border-amber-300 rounded-xl p-2.5 text-xs font-bold" />
                     </div>
                   </div>
                 </div>
@@ -1978,7 +2030,7 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium">
+      <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium relative z-10">
         <p>© 2026 {siteContent.brandName} • Sunday City Private Waves Host</p>
       </footer>
     </div>
