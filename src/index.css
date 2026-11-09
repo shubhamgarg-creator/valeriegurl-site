@@ -6,37 +6,33 @@ body {
   margin: 0;
   background-color: #ffffff;
   color: #111827;
+  overflow-x: hidden;
 }
 
-/* Snowfall Smooth Falling Keyframe */
-@keyframes snowfall {
+/* Explicit Snowfall Animation CSS */
+@keyframes snowfallAnim {
   0% {
     transform: translateY(-20px) translateX(0px);
+    opacity: 0.8;
   }
   50% {
-    transform: translateY(50vh) translateX(25px);
+    transform: translateY(50vh) translateX(30px);
+    opacity: 1;
   }
   100% {
-    transform: translateY(105vh) translateX(-15px);
+    transform: translateY(105vh) translateX(-20px);
+    opacity: 0.2;
   }
 }
 
-/* Sparkle / Blink Pulsing Star Keyframe */
-@keyframes twinkle {
+/* Explicit Blink Sparkle Animation CSS */
+@keyframes twinkleAnim {
   0%, 100% {
     opacity: 0.1;
-    transform: scale(0.6);
+    transform: scale(0.5);
   }
   50% {
     opacity: 1;
-    transform: scale(1.4);
+    transform: scale(1.5);
   }
-}
-
-.animate-snowfall {
-  animation: snowfall linear infinite;
-}
-
-.animate-twinkle {
-  animation: twinkle ease-in-out infinite;
 }
