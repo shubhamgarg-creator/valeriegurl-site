@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BackgroundEffects, { DEFAULT_EFFECTS } from './components/BackgroundEffects';
 import EffectsAdminPanel from './components/EffectsAdminPanel';
+import HeaderStudio, { DEFAULT_HEADER } from './components/HeaderStudio';
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue } from "firebase/database";
 import { 
@@ -219,6 +220,34 @@ export default function App() {
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [selectedProofModal, setSelectedProofModal] = useState(null);
 
+  // V25: isolated header settings; no writes to legacy theme/content/effects paths.
+  const [headerConfig, setHeaderConfig] = useState({ ...DEFAULT_HEADER });
+  const [headerDraft, setHeaderDraft] = useState({ ...DEFAULT_HEADER });
+  const [headerSaving, setHeaderSaving] = useState(false);
+  useEffect(() => {
+    const unsubscribe = onValue(ref(db, 'valerie_site/headerStudio'), snapshot => {
+      const data = snapshot.val();
+      const merged = { ...DEFAULT_HEADER, ...(data && typeof data === 'object' ? data : {}) };
+      merged.navItems = DEFAULT_HEADER.navItems.map(item => ({
+        ...item, ...((Array.isArray(data?.navItems) ? data.navItems : []).find(x => x?.id === item.id) || {})
+      }));
+      setHeaderConfig(merged);
+      setHeaderDraft(merged);
+    }, error => console.error('Header settings sync failed:', error));
+    return () => unsubscribe();
+  }, []);
+  const saveHeaderSettings = async () => {
+    setHeaderSaving(true);
+    try {
+      await set(ref(db, 'valerie_site/headerStudio'), headerDraft);
+      showTempMsg('Header customization saved to cloud!');
+    } catch (error) {
+      console.error('Header save failed:', error);
+      alert('Header settings could not be saved. Check Firebase permissions.');
+    } finally { setHeaderSaving(false); }
+  };
+  const currentHeader = isLoggedIn && activeTab === 'dashboard' && adminViewTab === 'header'
+    ? headerDraft : headerConfig;
   // V21: separate Firebase path keeps all existing V20 theme/content untouched.
   const [effects, setEffects] = useState({ ...DEFAULT_EFFECTS });
   const [effectsDraft, setEffectsDraft] = useState({ ...DEFAULT_EFFECTS });
@@ -569,69 +598,86 @@ export default function App() {
       <style>{globalTypographyCss + layoutCss}</style>
       <BackgroundEffects settings={isLoggedIn && activeTab === 'dashboard' && adminViewTab === 'effects' ? effectsDraft : effects} />
       
-      {/* 1. Top Header Navbar */}
-      <header 
-        className="sticky top-0 z-50 px-4 lg:px-8 py-3 shadow-md border-b-2" 
-        style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: 'rgba(0,0,0,0.15)' }}
+      {/* V25 Header Studio: original V24 structure and content preserved by default. */}
+      <header
+        className={`${currentHeader.sticky ? 'sticky top-0' : 'relative'} z-50 border-b-2 v25-header`}
+        style={{
+          backgroundColor: currentHeader.background || theme.headerBg,
+          color: currentHeader.textColor || theme.headerText,
+          borderColor: currentHeader.borderColor,
+          '--v25-header-px': `${currentHeader.headerPaddingX}px`,
+          '--v25-header-py': `${currentHeader.headerPaddingY}px`,
+          minHeight: currentHeader.headerHeight || undefined,
+          boxShadow: currentHeader.shadow ? '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' : 'none'
+        }}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 flex-shrink-0">
-              <img 
-                src={realValerieAvatar} 
-                alt="Host Avatar" 
-                style={{ borderColor: theme.avatarRingColor || '#ec4899' }}
-                className="w-10 h-10 rounded-full border-2 object-cover object-top shadow-sm"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80";
+        <div className="mx-auto flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3" style={{ maxWidth: currentHeader.headerMaxWidth }}>
+          <div className="flex items-center min-w-0" style={{
+            gap: currentHeader.brandGap,
+            justifyContent: currentHeader.brandAlign === 'center' ? 'center' : currentHeader.brandAlign === 'right' ? 'flex-end' : 'flex-start'
+          }}>
+            {currentHeader.avatarVisible && <div className="relative flex-shrink-0 v25-avatar" style={{ width: currentHeader.avatarSize, height: currentHeader.avatarSize, '--v25-mobile-avatar': `${currentHeader.mobileAvatarSize}px` }}>
+              <img
+                src={currentHeader.avatarUrl || realValerieAvatar}
+                alt="Host Avatar"
+                style={{
+                  width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top',
+                  borderRadius: `${currentHeader.avatarRadius}%`,
+                  borderWidth: currentHeader.avatarBorderWidth,
+                  borderStyle: 'solid',
+                  borderColor: currentHeader.avatarBorderColor || theme.avatarRingColor || '#ec4899'
                 }}
+                className="shadow-sm"
+                onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = realValerieAvatar; }}
               />
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-base sm:text-lg">{siteContent.selectedSymbol}</span>
-                <RenderDynamicBrandName name={siteContent.brandName} fontSize="text-base sm:text-lg" />
-              </div>
-              <p className="text-xs font-mono font-bold flex items-center gap-1" style={{ color: theme.headerText }}>
-                <Wifi className="w-3 h-3 text-emerald-600 animate-pulse" /> LIVE CLOUD SYNC
-              </p>
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+            </div>}
+            <div className="min-w-0" style={{ display: 'flex', flexDirection: currentHeader.syncPlacement === 'above' ? 'column-reverse' : currentHeader.syncPlacement === 'right' ? 'row' : 'column', gap: currentHeader.syncPlacement === 'right' ? 10 : 0, alignItems: 'flex-start' }}>
+              {currentHeader.brandVisible && <div className="flex items-center gap-1.5 min-w-0">
+                {currentHeader.brandSymbolVisible && <span style={{ fontSize: currentHeader.brandSymbolSize }}>{siteContent.selectedSymbol}</span>}
+                <span className="inline-flex items-center font-black tracking-wide min-w-0 v25-brand-name" style={{
+                  fontSize: currentHeader.brandFontSize,
+                  '--v25-mobile-brand': `${currentHeader.mobileBrandSize}px`,
+                  fontWeight: currentHeader.brandFontWeight,
+                  letterSpacing: currentHeader.brandLetterSpacing,
+                  fontFamily: currentHeader.brandFontFamily || undefined
+                }}>
+                  {Array.from(siteContent.brandName || '').map((char, index) => <span key={index} style={{ color: currentHeader.brandColor || (theme.nameLetterColors || defaultTheme.nameLetterColors)[index % (theme.nameLetterColors || defaultTheme.nameLetterColors).length] }}>{char === ' ' ? '\u00a0' : char}</span>)}
+                </span>
+              </div>}
+              {currentHeader.syncVisible && <p className="font-mono font-bold flex items-center gap-1" style={{ fontSize: currentHeader.syncFontSize, color: currentHeader.syncColor || theme.headerText }}>
+                <Wifi className={`w-3 h-3 ${currentHeader.syncBlink ? 'animate-pulse' : ''}`} style={{ color: currentHeader.syncIconColor }} />
+                {currentHeader.syncText}
+              </p>}
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-bold" style={{ color: theme.headerText }}>
-            <a href="#booking" onClick={() => setActiveTab('booking')} className="hover:opacity-80 transition-opacity">Wave Booking</a>
-            <a href="#rules" className="hover:opacity-80 transition-opacity">Party Rules</a>
-            <a href="#stats" className="hover:opacity-80 transition-opacity">Host Stats</a>
-            <a href={siteContent.discordUrl} target="_blank" rel="noreferrer" className="hover:opacity-80 transition-opacity flex items-center gap-1">
-              Discord <ExternalLink className="w-3 h-3" />
-            </a>
-          </nav>
+          {currentHeader.navVisible && <nav className="hidden md:flex items-center font-bold" style={{
+            gap: currentHeader.navGap, fontSize: currentHeader.navFontSize,
+            fontWeight: currentHeader.navFontWeight,
+            color: currentHeader.navColor || theme.headerText,
+            justifyContent: currentHeader.navAlign === 'left' ? 'flex-start' : currentHeader.navAlign === 'right' ? 'flex-end' : 'center'
+          }}>
+            {(currentHeader.navItems || DEFAULT_HEADER.navItems).filter(item => item.visible).slice().sort((a,b) => a.order-b.order).map(item =>
+              item.id === 'discord' ? <a key={item.id} href={siteContent.discordUrl} target="_blank" rel="noreferrer" className="hover:opacity-80 transition-opacity flex items-center gap-1">{item.label}<ExternalLink className="w-3 h-3" /></a>
+                : <a key={item.id} href={`#${item.id}`} onClick={() => { if (item.id === 'booking') setActiveTab('booking'); }} className="hover:opacity-80 transition-opacity">{item.label}</a>
+            )}
+          </nav>}
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-900 text-xs font-bold shadow-sm border border-gray-200">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            {currentHeader.wavesVisible && <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 font-bold shadow-sm border border-gray-200" style={{ backgroundColor: currentHeader.wavesBg, color: currentHeader.wavesColor, fontSize: currentHeader.wavesFontSize, borderRadius: currentHeader.wavesRadius }}>
+              <span className={`w-2.5 h-2.5 rounded-full bg-emerald-500 ${currentHeader.wavesBlink ? 'animate-pulse' : ''}`} />
               {siteContent.wavesTimingText}
-            </div>
-
-            {isLoggedIn ? (
-              <button 
-                onClick={() => setActiveTab(activeTab === 'dashboard' ? 'booking' : 'dashboard')}
-                style={adminBtnBorderStyle}
-                className="px-4 py-2 text-xs font-black transition-all shadow-sm hover:opacity-90"
-              >
-                {activeTab === 'dashboard' ? 'View Website' : 'Admin Dashboard'}
-              </button>
-            ) : (
-              <button 
-                onClick={() => setShowLoginModal(true)}
-                style={adminBtnBorderStyle}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all shadow-sm hover:opacity-90"
-              >
-                <LogIn className="w-3.5 h-3.5" /> Host Login
-              </button>
-            )}
+            </div>}
+            {currentHeader.adminVisible && (isLoggedIn ? <button
+              onClick={() => setActiveTab(activeTab === 'dashboard' ? 'booking' : 'dashboard')}
+              style={{ ...adminBtnBorderStyle, fontSize: currentHeader.adminFontSize, padding: `${currentHeader.adminPaddingY}px ${currentHeader.adminPaddingX}px` }}
+              className="font-black transition-all shadow-sm hover:opacity-90"
+            >{activeTab === 'dashboard' ? 'View Website' : 'Admin Dashboard'}</button> : <button
+              onClick={() => setShowLoginModal(true)}
+              style={{ ...adminBtnBorderStyle, fontSize: currentHeader.adminFontSize, padding: `${currentHeader.adminPaddingY}px ${currentHeader.adminPaddingX}px` }}
+              className="flex items-center gap-1.5 font-bold transition-all shadow-sm hover:opacity-90"
+            ><LogIn className="w-3.5 h-3.5" /> Host Login</button>)}
           </div>
         </div>
       </header>
@@ -696,6 +742,11 @@ export default function App() {
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" /> Layout & Typography
+              </button>
+
+              <button type="button" onClick={() => setAdminViewTab('header')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${adminViewTab === 'header' ? 'bg-pink-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-pink-200'}`}>
+                <Settings className="w-3.5 h-3.5" /> Header Studio
               </button>
 
               <button type="button" onClick={() => setAdminViewTab('effects')}
@@ -1335,6 +1386,13 @@ export default function App() {
             )}
 
             {/* TAB 3: ALL SENTENCES, TITLES, EMOJIS & TEXT DYNAMIC EDITOR */}
+            {adminViewTab === 'header' && (
+              <HeaderStudio settings={headerDraft} onChange={setHeaderDraft}
+                onSave={saveHeaderSettings}
+                onReset={() => setHeaderDraft({ ...DEFAULT_HEADER })}
+                saving={headerSaving} />
+            )}
+
             {adminViewTab === 'effects' && (
               <EffectsAdminPanel settings={effectsDraft} onChange={setEffectsDraft}
                 onSave={saveBackgroundEffects}

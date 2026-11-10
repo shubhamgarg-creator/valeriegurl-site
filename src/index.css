@@ -51,3 +51,12 @@ body {
 @keyframes v24-shuffle-left { from { transform:rotate(-28deg) translateX(-4px); } to { transform:rotate(28deg) translateX(5px); } }
 @keyframes v24-shuffle-right { from { transform:rotate(28deg) translateX(4px); } to { transform:rotate(-28deg) translateX(-5px); } }
 @media (prefers-reduced-motion:reduce) { .v24-girl,.v24-girl-body,.v24-arm-left,.v24-arm-right,.v24-leg-left,.v24-leg-right { animation:none!important; } }
+/* V25: only header responsive brand sizing; desktop original stays unchanged. */
+@media (max-width: 639px) {
+  #site-root > header nav { display: none; }
+  #site-root > header .v25-mobile-safe { min-width: 0; }
+}
+
+.v25-header { padding: var(--v25-header-py, 12px) var(--v25-header-px, 16px); }
+@media (min-width: 1024px) { .v25-header { padding-left: calc(var(--v25-header-px, 16px) * 2); padding-right: calc(var(--v25-header-px, 16px) * 2); } }
+@media (max-width: 639px) { .v25-brand-name { font-size: var(--v25-mobile-brand, 16px) !important; } .v25-avatar { width: var(--v25-mobile-avatar, 40px) !important; height: var(--v25-mobile-avatar, 40px) !important; } }
