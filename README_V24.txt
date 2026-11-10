@@ -1,0 +1,1 @@
+V24 Girls Only: V23 base preserved, removed moonwalk male component and CSS. Three to five girls in independent positions with independent dance steps, colors, size, opacity, speeds, enable switches, and optional movement. Default girls enabled. Firebase saves to valerie_site/backgroundEffects. Browser and Firebase live test recommended.

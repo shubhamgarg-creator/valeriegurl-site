@@ -227,6 +227,7 @@ export default function App() {
     const unsubscribe = onValue(ref(db, 'valerie_site/backgroundEffects'), snapshot => {
       const data = snapshot.val();
       const next = { ...DEFAULT_EFFECTS, ...(data && typeof data === 'object' ? data : {}) };
+      // Legacy male dancer settings are intentionally ignored; V24 renders girls only.
       setEffects(next);
       setEffectsDraft(next);
     }, error => console.error('Background effects sync failed:', error));

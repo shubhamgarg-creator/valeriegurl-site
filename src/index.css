@@ -18,61 +18,36 @@ body {
 @media (prefers-reduced-motion:reduce) { .v21-glow,.v21-snow { animation:none!important; } }
 
 
-/* V22 original moonwalk-style dancer; decoration only, no click interception. */
-.v22-dancer-track { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
-.v22-dancer-travel {
-  position:absolute; bottom:var(--dancer-bottom); left:0;
-  width:var(--dancer-size); height:calc(var(--dancer-size) * 1.70833);
-  color:var(--dancer-color); opacity:var(--dancer-opacity);
-  animation:v22-dancer-cross var(--dancer-duration) linear infinite;
-  animation-direction:var(--dancer-direction);
-}
-.v22-dancer-travel svg { width:100%; height:100%; overflow:visible; }
-.v22-dancer-bounce { animation:v22-dancer-bop .65s ease-in-out infinite alternate; }
-.v22-dancer-arm-left { animation:v22-arm-left .7s ease-in-out infinite alternate; }
-.v22-dancer-arm-right { animation:v22-arm-right .7s ease-in-out infinite alternate; }
-.v22-dancer-leg-left { animation:v22-leg-left .6s ease-in-out infinite alternate; }
-.v22-dancer-leg-right { animation:v22-leg-right .6s ease-in-out infinite alternate; }
-@keyframes v22-dancer-cross {
-  from { transform:translateX(calc(-1 * var(--dancer-size))); }
-  to { transform:translateX(100vw); }
-}
-@keyframes v22-dancer-bop { from { transform:translateY(0) rotate(-2deg); } to { transform:translateY(-7px) rotate(2deg); } }
-@keyframes v22-arm-left { from { transform:rotate(-23deg); } to { transform:rotate(32deg); } }
-@keyframes v22-arm-right { from { transform:rotate(28deg); } to { transform:rotate(-30deg); } }
-@keyframes v22-leg-left { from { transform:rotate(-19deg) translateX(-2px); } to { transform:rotate(18deg) translateX(3px); } }
-@keyframes v22-leg-right { from { transform:rotate(19deg) translateX(2px); } to { transform:rotate(-18deg) translateX(-3px); } }
-@media (prefers-reduced-motion:reduce) {
-  .v22-dancer-travel { animation:none!important; transform:translateX(15vw); }
-  .v22-dancer-bounce,.v22-dancer-arm-left,.v22-dancer-arm-right,.v22-dancer-leg-left,.v22-dancer-leg-right { animation:none!important; }
-}
-
-/* V23: 3–5 original dancing silhouettes, layered behind the site content. */
-.v23-girls-track { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
-.v23-girl-travel {
-  position:absolute; bottom:var(--girls-bottom); left:0;
-  width:var(--girls-size); height:calc(var(--girls-size) * 1.9);
-  color:var(--girl-color); opacity:var(--girls-opacity);
-  animation:v23-girls-cross var(--girls-travel-duration) linear infinite;
-  animation-direction:var(--girls-direction);
-  animation-delay:var(--girl-delay);
-}
-.v23-girl-travel svg { width:100%; height:100%; overflow:visible; }
-.v23-girl-bop { transform:scale(var(--girl-scale)); transform-origin:center bottom; animation:v23-girl-bop var(--girls-dance-duration) ease-in-out infinite alternate; }
-.v23-girl-arm-a { animation:v23-girl-arm-a var(--girls-dance-duration) ease-in-out infinite alternate; }
-.v23-girl-arm-b { animation:v23-girl-arm-b var(--girls-dance-duration) ease-in-out infinite alternate; }
-.v23-girl-leg-a { animation:v23-girl-leg-a var(--girls-dance-duration) ease-in-out infinite alternate; }
-.v23-girl-leg-b { animation:v23-girl-leg-b var(--girls-dance-duration) ease-in-out infinite alternate; }
-@keyframes v23-girls-cross {
-  from { transform:translateX(calc(-1 * (var(--girls-size) + var(--girl-offset)))); }
-  to { transform:translateX(calc(100vw + var(--girl-offset))); }
-}
-@keyframes v23-girl-bop { from { transform:scale(var(--girl-scale)) translateY(0) rotate(-3deg); } to { transform:scale(var(--girl-scale)) translateY(-9px) rotate(3deg); } }
-@keyframes v23-girl-arm-a { from { transform:rotate(-38deg); } to { transform:rotate(35deg); } }
-@keyframes v23-girl-arm-b { from { transform:rotate(38deg); } to { transform:rotate(-35deg); } }
-@keyframes v23-girl-leg-a { from { transform:rotate(-13deg); } to { transform:rotate(16deg); } }
-@keyframes v23-girl-leg-b { from { transform:rotate(16deg); } to { transform:rotate(-13deg); } }
-@media (prefers-reduced-motion:reduce) {
-  .v23-girl-travel { animation:none!important; transform:translateX(calc(15vw + var(--girl-offset))); }
-  .v23-girl-bop,.v23-girl-arm-a,.v23-girl-arm-b,.v23-girl-leg-a,.v23-girl-leg-b { animation:none!important; }
-}
+/* V24: girls-only decorative layer, independent placement and choreography. */
+.v24-girls-layer { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.v24-girl { position:absolute; height:auto; aspect-ratio:100/190; transform:translateX(-50%); pointer-events:none; }
+.v24-girl svg { display:block; width:100%; height:100%; overflow:visible; }
+.v24-girl-body { width:100%; height:100%; transform-origin:50% 85%; animation:v24-bounce var(--dance-duration) ease-in-out infinite alternate; }
+.v24-arm-left,.v24-arm-right { transform-origin:39px 59px; animation:v24-arm-left var(--dance-duration) ease-in-out infinite alternate; }
+.v24-arm-right { transform-origin:61px 59px; animation-name:v24-arm-right; }
+.v24-leg-left,.v24-leg-right { transform-origin:42px 125px; animation:v24-leg-left var(--dance-duration) ease-in-out infinite alternate; }
+.v24-leg-right { transform-origin:58px 125px; animation-name:v24-leg-right; }
+.v24-step-disco .v24-arm-left { animation-name:v24-disco-left; }
+.v24-step-disco .v24-arm-right { animation-name:v24-disco-right; }
+.v24-step-shuffle .v24-leg-left { animation-name:v24-shuffle-left; }
+.v24-step-shuffle .v24-leg-right { animation-name:v24-shuffle-right; }
+.v24-step-wave .v24-girl-body { animation-name:v24-wave; }
+.v24-step-wave .v24-arm-left { animation-name:v24-disco-left; }
+.v24-step-twist .v24-girl-body { animation-name:v24-twist; }
+.v24-step-twist .v24-leg-right { animation-name:v24-shuffle-right; }
+.v24-move-left-to-right { animation:v24-cross-right var(--travel-duration) linear infinite; }
+.v24-move-right-to-left { animation:v24-cross-left var(--travel-duration) linear infinite; }
+@keyframes v24-cross-right { from { translate:calc(-100vw - var(--girl-size)) 0; } to { translate:calc(100vw + var(--girl-size)) 0; } }
+@keyframes v24-cross-left { from { translate:calc(100vw + var(--girl-size)) 0; } to { translate:calc(-100vw - var(--girl-size)) 0; } }
+@keyframes v24-bounce { from { transform:translateY(0) rotate(-3deg); } to { transform:translateY(-9px) rotate(3deg); } }
+@keyframes v24-wave { from { transform:skewX(-6deg) translateY(0); } to { transform:skewX(7deg) translateY(-10px); } }
+@keyframes v24-twist { from { transform:rotate(-12deg) scaleX(.94); } to { transform:rotate(12deg) scaleX(1.06); } }
+@keyframes v24-arm-left { from { transform:rotate(-38deg); } to { transform:rotate(35deg); } }
+@keyframes v24-arm-right { from { transform:rotate(38deg); } to { transform:rotate(-35deg); } }
+@keyframes v24-disco-left { from { transform:rotate(-95deg); } to { transform:rotate(20deg); } }
+@keyframes v24-disco-right { from { transform:rotate(95deg); } to { transform:rotate(-25deg); } }
+@keyframes v24-leg-left { from { transform:rotate(-13deg); } to { transform:rotate(16deg); } }
+@keyframes v24-leg-right { from { transform:rotate(16deg); } to { transform:rotate(-13deg); } }
+@keyframes v24-shuffle-left { from { transform:rotate(-28deg) translateX(-4px); } to { transform:rotate(28deg) translateX(5px); } }
+@keyframes v24-shuffle-right { from { transform:rotate(28deg) translateX(4px); } to { transform:rotate(-28deg) translateX(-5px); } }
+@media (prefers-reduced-motion:reduce) { .v24-girl,.v24-girl-body,.v24-arm-left,.v24-arm-right,.v24-leg-left,.v24-leg-right { animation:none!important; } }
