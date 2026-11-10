@@ -7,3 +7,12 @@ body {
   background-color: #ffffff;
   color: #111827;
 }
+
+/* V21 decorative layer: never intercepts user interactions. */
+#site-root { isolation: isolate; }
+.v21-effects-layer { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; contain:strict; }
+.v21-glow { position:absolute; border-radius:50%; animation:v21-twinkle ease-in-out infinite alternate; }
+.v21-snow { position:absolute; top:-30px; border-radius:50%; animation:v21-snowfall linear infinite; }
+@keyframes v21-twinkle { from { opacity:.08; transform:scale(.45); } to { opacity:var(--particle-opacity); transform:scale(1.6); } }
+@keyframes v21-snowfall { from { transform:translate3d(0,-5vh,0); } to { transform:translate3d(var(--snow-drift),110vh,0); } }
+@media (prefers-reduced-motion:reduce) { .v21-glow,.v21-snow { animation:none!important; } }

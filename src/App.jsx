@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import BackgroundEffects, { DEFAULT_EFFECTS } from './components/BackgroundEffects';
+import EffectsAdminPanel from './components/EffectsAdminPanel';
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue } from "firebase/database";
 import { 
@@ -216,6 +218,30 @@ export default function App() {
 
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [selectedProofModal, setSelectedProofModal] = useState(null);
+
+  // V21: separate Firebase path keeps all existing V20 theme/content untouched.
+  const [effects, setEffects] = useState({ ...DEFAULT_EFFECTS });
+  const [effectsDraft, setEffectsDraft] = useState({ ...DEFAULT_EFFECTS });
+  const [effectsSaving, setEffectsSaving] = useState(false);
+  useEffect(() => {
+    const unsubscribe = onValue(ref(db, 'valerie_site/backgroundEffects'), snapshot => {
+      const data = snapshot.val();
+      const next = { ...DEFAULT_EFFECTS, ...(data && typeof data === 'object' ? data : {}) };
+      setEffects(next);
+      setEffectsDraft(next);
+    }, error => console.error('Background effects sync failed:', error));
+    return () => unsubscribe();
+  }, []);
+  const saveBackgroundEffects = async () => {
+    setEffectsSaving(true);
+    try {
+      await set(ref(db, 'valerie_site/backgroundEffects'), effectsDraft);
+      showTempMsg('Background effects saved to cloud!');
+    } catch (error) {
+      console.error('Background effects save failed:', error);
+      alert('Could not save background effects. Check Firebase permissions.');
+    } finally { setEffectsSaving(false); }
+  };
 
   // Live preview while editing. Saved settings continue to sync through Firebase.
   useEffect(() => { setTheme(editThemeForm); }, [editThemeForm]);
@@ -540,6 +566,7 @@ export default function App() {
       style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}
     >
       <style>{globalTypographyCss + layoutCss}</style>
+      <BackgroundEffects settings={isLoggedIn && activeTab === 'dashboard' && adminViewTab === 'effects' ? effectsDraft : effects} />
       
       {/* 1. Top Header Navbar */}
       <header 
@@ -609,7 +636,7 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-12">
         
         {saveSuccessMsg && (
           <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white font-black px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
@@ -668,6 +695,11 @@ export default function App() {
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" /> Layout & Typography
+              </button>
+
+              <button type="button" onClick={() => setAdminViewTab('effects')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${adminViewTab === 'effects' ? 'bg-pink-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-pink-200'}`}>
+                <Sparkles className="w-3.5 h-3.5" /> Animations & Snowfall
               </button>
 
               <button 
@@ -1302,6 +1334,13 @@ export default function App() {
             )}
 
             {/* TAB 3: ALL SENTENCES, TITLES, EMOJIS & TEXT DYNAMIC EDITOR */}
+            {adminViewTab === 'effects' && (
+              <EffectsAdminPanel settings={effectsDraft} onChange={setEffectsDraft}
+                onSave={saveBackgroundEffects}
+                onReset={() => setEffectsDraft({ ...DEFAULT_EFFECTS })}
+                saving={effectsSaving} />
+            )}
+
             {adminViewTab === 'content' && (
               <form onSubmit={handleSaveDynamicContent} className="bg-white border-2 border-pink-200 rounded-2xl p-6 space-y-8 shadow-sm">
                 <div className="pb-3 border-b border-gray-200">
@@ -2004,7 +2043,7 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer data-customizable="footer" className="border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium">
+      <footer data-customizable="footer" className="relative z-10 border-t border-gray-200 py-6 text-center text-xs text-gray-600 bg-gray-50 font-medium">
         <p>© 2026 {siteContent.brandName} • Sunday City Private Waves Host</p>
       </footer>
     </div>
