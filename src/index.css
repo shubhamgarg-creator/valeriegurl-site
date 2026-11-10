@@ -16,3 +16,33 @@ body {
 @keyframes v21-twinkle { from { opacity:.08; transform:scale(.45); } to { opacity:var(--particle-opacity); transform:scale(1.6); } }
 @keyframes v21-snowfall { from { transform:translate3d(0,-5vh,0); } to { transform:translate3d(var(--snow-drift),110vh,0); } }
 @media (prefers-reduced-motion:reduce) { .v21-glow,.v21-snow { animation:none!important; } }
+
+
+/* V22 original moonwalk-style dancer; decoration only, no click interception. */
+.v22-dancer-track { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.v22-dancer-travel {
+  position:absolute; bottom:var(--dancer-bottom); left:0;
+  width:var(--dancer-size); height:calc(var(--dancer-size) * 1.70833);
+  color:var(--dancer-color); opacity:var(--dancer-opacity);
+  animation:v22-dancer-cross var(--dancer-duration) linear infinite;
+  animation-direction:var(--dancer-direction);
+}
+.v22-dancer-travel svg { width:100%; height:100%; overflow:visible; }
+.v22-dancer-bounce { animation:v22-dancer-bop .65s ease-in-out infinite alternate; }
+.v22-dancer-arm-left { animation:v22-arm-left .7s ease-in-out infinite alternate; }
+.v22-dancer-arm-right { animation:v22-arm-right .7s ease-in-out infinite alternate; }
+.v22-dancer-leg-left { animation:v22-leg-left .6s ease-in-out infinite alternate; }
+.v22-dancer-leg-right { animation:v22-leg-right .6s ease-in-out infinite alternate; }
+@keyframes v22-dancer-cross {
+  from { transform:translateX(calc(-1 * var(--dancer-size))); }
+  to { transform:translateX(100vw); }
+}
+@keyframes v22-dancer-bop { from { transform:translateY(0) rotate(-2deg); } to { transform:translateY(-7px) rotate(2deg); } }
+@keyframes v22-arm-left { from { transform:rotate(-23deg); } to { transform:rotate(32deg); } }
+@keyframes v22-arm-right { from { transform:rotate(28deg); } to { transform:rotate(-30deg); } }
+@keyframes v22-leg-left { from { transform:rotate(-19deg) translateX(-2px); } to { transform:rotate(18deg) translateX(3px); } }
+@keyframes v22-leg-right { from { transform:rotate(19deg) translateX(2px); } to { transform:rotate(-18deg) translateX(-3px); } }
+@media (prefers-reduced-motion:reduce) {
+  .v22-dancer-travel { animation:none!important; transform:translateX(15vw); }
+  .v22-dancer-bounce,.v22-dancer-arm-left,.v22-dancer-arm-right,.v22-dancer-leg-left,.v22-dancer-leg-right { animation:none!important; }
+}

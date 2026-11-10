@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-export const DEFAULT_EFFECTS = { animationEnabled:true, snowfallEnabled:true, animationColor:'#f9a8d4', animationCount:32, animationSpeed:1, animationOpacity:0.55, animationSize:5, snowColor:'#ffffff', snowCount:65, snowSpeed:1, snowOpacity:0.8, snowSize:5 };
+import MoonwalkDancer from './MoonwalkDancer';
+export const DEFAULT_EFFECTS = { animationEnabled:true, snowfallEnabled:true, animationColor:'#f9a8d4', animationCount:32, animationSpeed:1, animationOpacity:0.55, animationSize:5, snowColor:'#ffffff', snowCount:65, snowSpeed:1, snowOpacity:0.8, snowSize:5, dancerEnabled:true, dancerSpeed:1, dancerSize:130, dancerColor:'#a21caf', dancerOpacity:0.38, dancerBottom:9, dancerDirection:'left-to-right' };
 const clamp=(v,min,max,def)=>Number.isFinite(Number(v))?Math.min(max,Math.max(min,Number(v))):def;
 const safeColor=(v,f)=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v)?v:f;
 const rand=n=>{const x=Math.sin(n*127.1)*43758.5453;return x-Math.floor(x)};
@@ -14,5 +15,6 @@ export default function BackgroundEffects({settings={}}){
  return <div className="v21-effects-layer" aria-hidden="true">
  {c.animationEnabled&&glows.map(p=>{const s=clamp(c.animationSize,1,25,5)*p.scale;return <span key={'g'+p.id} className="v21-glow" style={{left:p.x+'%',top:p.y+'%',width:s,height:s,backgroundColor:gc,boxShadow:`0 0 ${s*3}px ${gc}`,'--particle-opacity':clamp(c.animationOpacity,0,1,.55),animationDuration:(p.duration*3/gs)+'s',animationDelay:p.delay+'s'}}/>})}
  {c.snowfallEnabled&&snow.map(p=>{const s=clamp(c.snowSize,1,25,5)*p.scale;return <span key={'s'+p.id} className="v21-snow" style={{left:p.x+'%',width:s,height:s,opacity:clamp(c.snowOpacity,0,1,.8),backgroundColor:sc,boxShadow:`0 0 ${s}px ${sc}`,'--snow-drift':p.drift+'px',animationDuration:((8+p.duration*5)/ss)+'s',animationDelay:p.delay+'s'}}/>})}
+ <MoonwalkDancer settings={c} />
  </div>;
 }
