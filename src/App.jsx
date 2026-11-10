@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BackgroundEffects, { DEFAULT_EFFECTS } from './components/BackgroundEffects';
 import EffectsAdminPanel from './components/EffectsAdminPanel';
 import HeaderStudio, { DEFAULT_HEADER } from './components/HeaderStudio';
+import TextPositionStudio from './components/TextPositionStudio';
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue } from "firebase/database";
 import { 
@@ -69,6 +70,21 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [passcode, setPasscode] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // V26: independent per-text position and typography settings, isolated from V25 theme.
+  const [textStudioOpen, setTextStudioOpen] = useState(false);
+  const [textOverrides, setTextOverrides] = useState({});
+  useEffect(() => {
+    const unsubscribe = onValue(ref(db, 'valerie_site/textPositionStudio'), snapshot => {
+      const value = snapshot.val();
+      setTextOverrides(value && typeof value === 'object' && !Array.isArray(value) ? value : {});
+    }, error => console.error('Text Position Studio sync failed:', error));
+    return () => unsubscribe();
+  }, []);
+  const saveTextOverrides = async (next) => {
+    await set(ref(db, 'valerie_site/textPositionStudio'), next);
+    showTempMsg('Individual text settings saved!');
+  };
+
   const [activeTab, setActiveTab] = useState('booking');
   const [adminViewTab, setAdminViewTab] = useState('active');
 
@@ -596,6 +612,13 @@ export default function App() {
       style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}
     >
       <style>{globalTypographyCss + layoutCss}</style>
+      <TextPositionStudio enabled={isLoggedIn && textStudioOpen}
+        onClose={() => setTextStudioOpen(false)} saved={textOverrides} onSave={saveTextOverrides} />
+      {isLoggedIn && <button type="button" data-v26-editor="true"
+        onClick={() => setTextStudioOpen(v => !v)}
+        style={{position:'fixed',bottom:12,left:12,zIndex:99998,background:'#db2777',color:'#fff',padding:'10px 14px',borderRadius:12,fontWeight:800,boxShadow:'0 3px 15px #0003'}}>
+        {textStudioOpen ? '✏️ Text Editor ON' : '✏️ Edit All Text Positions'}
+      </button>}
       <BackgroundEffects settings={isLoggedIn && activeTab === 'dashboard' && adminViewTab === 'effects' ? effectsDraft : effects} />
       
       {/* V25 Header Studio: original V24 structure and content preserved by default. */}
